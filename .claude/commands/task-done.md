@@ -28,3 +28,12 @@ Say: "Review the following files: [list changed files]"
 Only after the reviewer returns **PASS** or all CRITICAL/WARNING issues are resolved:
 - Report the task as done
 - Summarise what was implemented and what the reviewer found
+
+## Step 5: Record the work
+
+Once step 4 holds — and not before:
+
+1. Append an entry at the top of the entries section in `docs/worklog.md`, following the format documented there. Newest first, a few lines.
+2. Tick the task in `docs/tasks/INDEX.md`: `- [ ]` → `- [x]`.
+
+Use today's real date (`date +%F`), not an assumed one. Never log a task the reviewer hasn't passed, and never record lint/build/test as green without having run them.
