@@ -13,7 +13,7 @@ apps/
 docs/
   specs/load-auction-spec.md   — ТЗ (источник истины по требованиям)
   tasks/                       — задачи по майлстоунам + INDEX.md (статус — галочками)
-  worklog.md                   — журнал выполненных задач (пишется в конце /task-done)
+  worklog.md                   — журнал выполненных задач (пишется сразу по завершении задачи, до отчёта в чате)
   lessons.md                   — корректировки от пользователя и выведенные из них правила
   adr/                         — architecture decision records (создаются в M6)
   diagrams/                    — C4 / hot-path / saga (создаются в M6)
