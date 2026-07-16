@@ -30,7 +30,7 @@ Use when **ANY** applies: new/changed module or command/query handler; a DB migr
 4. **Review** — `reviewer` + `engineering:code-review`. Classify Critical / Important / Minor. **Critical or Important → back to steps 2–3** until clean. Minor or clean → proceed.
 5. **Security** — `security-review`: auth/authz on guards & DTOs, no secrets/PII in logs, OWASP basics on new endpoints.
 6. **Spec & pattern check** — `spec-guardian` (canonical Redis keys / RMQ topology / endpoints / lifecycle) + `pattern-verifier` (run the integration tests for the touched pattern).
-7. **Report & PR** — summary + PR via `gh`, **only when the user explicitly asks** (`git-operations.md`: never commit/push unprompted; no AI mentions, no change stats, no test checklists).
+7. **Record & report** — once the reviewer passes, log the task in `docs/worklog.md` and tick it in `docs/tasks/INDEX.md` (§8); that part needs no prompting. Summary + PR via `gh` — **only when the user explicitly asks** (`git-operations.md`: never commit/push unprompted; no AI mentions, no change stats, no test checklists).
 
 ## 4. Architecture & infra variants
 - Architectural decision or domain modeling → put `architect` before implementation and record an ADR.
@@ -52,5 +52,11 @@ Use when **ANY** applies: new/changed module or command/query handler; a DB migr
 - Review `docs/lessons.md` at session start for this project.
 
 ## 8. Task tracking
-- Plan → `docs/todo.md` (checkable items) → confirm → mark items as you go → short review section at the end.
-- High-level summary per step in chat. Progress lives in `docs/todo.md` and the task list — **not** in code comments (see `code-style.md`).
+Three files, three horizons — don't mix them up:
+- `docs/todo.md` — **in-flight** plan for the current task. Plan → checkable items → confirm → mark as you go → short review section at the end. Scratch: it's rewritten per task.
+- `docs/worklog.md` — **done** work, append-only. One entry per completed task, written in `/task-done` step 5 once the reviewer returns PASS. Format and rules live at the top of the file. Read it at session start to see what's already built.
+- `docs/tasks/INDEX.md` — **status** of the M1–M6 backlog. Tick `- [ ]` → `- [x]` in the same step as the worklog entry, so the two never drift apart.
+
+Nothing is logged before it's proven: no reviewer PASS, or no green lint/build/test → no entry and no tick. Use the real date (`date +%F`).
+
+High-level summary per step in chat. Progress lives in these files and the task list — **not** in code comments (see `code-style.md`).
