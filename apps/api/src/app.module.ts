@@ -1,13 +1,15 @@
 import { randomUUID } from 'node:crypto';
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
-import { AppConfigModule } from './config/app-config.module';
-import { AppConfigService } from './config/app-config.service';
-import { HealthModule } from './health/health.module';
+import { AppConfigModule } from '@src/config/app-config.module';
+import { AppConfigService } from '@src/config/app-config.service';
+import { HealthModule } from '@src/health/health.module';
+import { PersistenceModule } from '@src/platform/persistence/persistence.module';
 
 @Module({
   imports: [
     AppConfigModule,
+    PersistenceModule,
     LoggerModule.forRootAsync({
       imports: [AppConfigModule],
       inject: [AppConfigService],
