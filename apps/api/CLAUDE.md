@@ -6,7 +6,7 @@
 - **NestJS 11.x** (CommonJS, Jest) — на v12 не переходим (ESM/Vitest нацелены на Q3 2026, для проекта рано).
 - TypeScript 5.7, `tsconfig` на `module: nodenext`, `strictNullChecks: true`.
 - Пакетный менеджер — **pnpm**.
-- `src/` пока содержит только бутстрап-слой (`main.ts`, `app.module.ts`, `config/`, `health/`). `modules/` и `platform/*`-пакеты появляются по задачам M1-03+.
+- `src/` содержит бутстрап-слой (`main.ts`, `app.module.ts`, `config/`, `health/`) и первый платформенный пакет — `platform/persistence`. Остальные `platform/*` и все `modules/` появляются по задачам M1-04+.
 
 ## Команды (из `apps/api/`)
 ```
@@ -16,6 +16,8 @@ pnpm test           # unit (jest, *.spec.ts рядом с кодом)
 pnpm test:e2e       # e2e (test/, supertest)
 pnpm lint           # eslint --fix
 pnpm format         # prettier
+pnpm test:integration        # testcontainers-тесты инфра-паттернов (*.integration-spec.ts)
+pnpm migration:generate/run/revert   # TypeORM CLI (typeorm-ts-node-commonjs)
 ```
 
 ## Целевая структура (§4.1, §9 ТЗ)
@@ -40,7 +42,10 @@ src/
 - Query-путь не повторяет церемонию write-пути: query-хендлер бьёт прямо в read-model/репозиторий и отдаёт DTO.
 - Валидация входа — `class-validator`/`class-transformer` на DTO в `api/`.
 - Domain-модули **не импортируют** внутренности `platform/*` — только публичные провайдеры модулей.
-- Алиас `@src/*` настроен в `tsconfig.json`/jest (`moduleNameMapper`) для тайп-чекинга и тестов. Рантайм-резолвинг скомпилированного `dist` (`tsc-alias` или аналог) добавится, когда алиас реально понадобится в глубоко вложенном коде — пока все импорты плоские и обходятся относительными путями.
+- **Импорты — через алиас `@src/*`.** Относительный путь допустим только до соседа по той же папке (`./unit-of-work`, `./env.schema`). Всё, что лежит вне текущей директории, импортируется алиасом: `@src/config/app-config.service`, а не `../../config/app-config.service` и не `./config/app-config.service`. `../` в импортах не используем вообще — при переносе файла такой путь молча меняет смысл. Алиас объявлен в `tsconfig.json` (`paths`) и продублирован в jest (`moduleNameMapper` в `package.json` и `test/jest-e2e.json`) — при добавлении нового алиаса правь все три места. Рантайм-резолвинг не нужен: `nest build` переписывает алиасы в относительные пути на компиляции, в `dist` их не остаётся (`tsc-alias` не требуется).
+- **Репозитории — обычные `@Injectable`, write-методы принимают `tx: TransactionContext` первым аргументом** (не хранят `EntityManager` на весь жизненный цикл). `BaseRepository<Entity>` (`platform/persistence/base.repository.ts`) даёт `protected repo(tx)`; конкретные репозитории наследуют и добавляют доменные методы.
+- **Оптимистичная блокировка — `@VersionColumn()`** на write-сущностях (Lot и т.п., с M2-05). Пессимистичный лок на чтение перед изменением — `tx.lockForUpdate(Entity, id)` (`platform/persistence/transaction-context.ts`), generic уже сейчас; доменный `lockLotForUpdate` в M2-05 — тонкая обёртка над ним.
+- **`tx.outbox.add(manager, eventType, payload)` — контракт до M2-03.** Без реализации `platform/outbox` бросает понятную ошибку («not configured yet»); `UnitOfWork` инжектит `OUTBOX_PORT` опционально, `platform/persistence` не зависит от `platform/outbox`.
 
 ## Библиотеки — осознанный выбор (не заменять)
 - `ioredis` (не node-redis): тяжёлый Lua/CAS через `defineCommand`, зрелый Pub/Sub.

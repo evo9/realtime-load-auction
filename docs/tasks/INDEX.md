@@ -8,7 +8,7 @@
 
 ## M1 — каркас
 - [x] [M1-01](M1-01-infra-docker-compose.md) — docker-compose + Makefile (postgres/rabbitmq/redis)
-- [ ] [M1-02](M1-02-nest-scaffold.md) — NestJS scaffold: config, логи, healthcheck
+- [x] [M1-02](M1-02-nest-scaffold.md) — NestJS scaffold: config, логи, healthcheck
 - [ ] [M1-03](M1-03-platform-persistence.md) — platform/persistence: TypeORM, UoW, миграции
 - [ ] [M1-04](M1-04-platform-stubs.md) — платформенные модули-заглушки + проводка AppModule
 - [ ] [M1-05](M1-05-identity.md) — identity: пользователи, роли, JWT, login

@@ -1,4 +1,7 @@
 allowBuilds:
   '@nestjs/core': true
   '@swc/core': true
+  cpu-features: false
+  protobufjs: false
+  ssh2: false
   unrs-resolver: true
