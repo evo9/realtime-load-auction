@@ -20,6 +20,9 @@ export const envSchema = z.object({
 
   REDIS_HOST: z.string().min(1),
   REDIS_PORT: z.coerce.number(),
+
+  JWT_SECRET: z.string().min(1),
+  JWT_EXPIRES_IN: z.string().default('1h'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

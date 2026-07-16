@@ -15,6 +15,11 @@ Format per entry:
 
 <!-- entries below, newest first -->
 
+## 2026-07-16 — Kill what you start, before reporting
+**Context:** Background `nest start --watch` processes piled up across iterations until an agent noticed and swept them. Earlier in the same session a `EADDRINUSE :::3000` was blamed on a leftover process and never traced — these were almost certainly it.
+**Mistake:** Long-running processes were started to verify things and then abandoned; the next iteration started another. A watcher was reached for where a one-shot `build`/`test`/`node dist/main` would have proved the same thing. Orphaned children kept holding port 3000 after the parent died.
+**Rule:** Verify with commands that exit on their own; a watcher is only for tasks about watch mode. If you start something long-running you own its lifecycle — kill it in the same task, before the chat summary, by process group (`pkill -f "nest start"`), since watchers orphan children. Check `pgrep -f "nest start|next dev"` and `lsof -i :3000` are empty before reporting; not empty means not finished. Same for temp probe files. Infra from `make up` is the user's and stays.
+
 ## 2026-07-16 — Record the task the moment it's done, never at the start of the next one
 **Context:** M1-03 was finished but `docs/worklog.md` had no entry and `INDEX.md` still showed `- [ ]`. The recording kept happening later — backfilled at the start of the following task.
 **Mistake:** Not laziness but a contradiction in the instructions. §3 step 7 said logging "needs no prompting", while §8, `worklog.md` and the root `CLAUDE.md` all said the entry is "written in `/task-done` step 5". Three places out of four bound recording to a user-invoked slash command, so the pipeline waited for a trigger that never came; §8's "read worklog at session start" then surfaced the gap and it got patched retroactively.

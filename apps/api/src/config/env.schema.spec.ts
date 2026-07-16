@@ -13,6 +13,7 @@ const validEnv = {
   RABBITMQ_DEFAULT_PASS: 'auction',
   REDIS_HOST: 'localhost',
   REDIS_PORT: '6379',
+  JWT_SECRET: 'test-secret',
 };
 
 describe('envSchema', () => {
@@ -29,6 +30,12 @@ describe('envSchema', () => {
 
     expect(parsed.NODE_ENV).toBe('development');
     expect(parsed.PORT).toBe(3000);
+  });
+
+  it('defaults JWT_EXPIRES_IN to 1h', () => {
+    const parsed = envSchema.parse(validEnv);
+
+    expect(parsed.JWT_EXPIRES_IN).toBe('1h');
   });
 
   it('throws with a readable message when a required variable is missing', () => {

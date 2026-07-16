@@ -18,6 +18,8 @@ async function bootstrap() {
     }),
   );
 
+  app.enableShutdownHooks();
+
   const config = app.get(AppConfigService);
   await app.listen(config.port);
 }
