@@ -47,4 +47,12 @@ export class CasService {
 
     return { accepted: accepted === 1, reason };
   }
+
+  async setStatus(lotId: string, status: 'open' | 'closing'): Promise<void> {
+    await this.client.set(RedisKeys.lotStatus(lotId), status);
+  }
+
+  async clear(lotId: string): Promise<void> {
+    await this.client.del(RedisKeys.lotStatus(lotId), RedisKeys.lotHigh(lotId));
+  }
 }

@@ -1,10 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { Module } from '@nestjs/common';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { LoggerModule } from 'nestjs-pino';
 import { AppConfigModule } from '@src/config/app-config.module';
 import { AppConfigService } from '@src/config/app-config.service';
 import { HealthModule } from '@src/health/health.module';
 import { AuctionModule } from '@src/modules/auction/auction.module';
+import { AuctionSchedulerWiringModule } from '@src/modules/auction/auction-scheduler-wiring.module';
 import { IdentityModule } from '@src/modules/identity/identity.module';
 import { IdempotencyModule } from '@src/platform/idempotency/idempotency.module';
 import { MessagingModule } from '@src/platform/messaging/messaging.module';
@@ -22,8 +25,10 @@ import { SchedulerModule } from '@src/platform/scheduler/scheduler.module';
     OutboxModule,
     IdempotencyModule,
     SchedulerModule,
+    ThrottlerModule.forRoot([{ ttl: 60_000, limit: 20 }]),
     IdentityModule,
     AuctionModule,
+    AuctionSchedulerWiringModule,
     LoggerModule.forRootAsync({
       imports: [AppConfigModule],
       inject: [AppConfigService],
@@ -41,5 +46,6 @@ import { SchedulerModule } from '@src/platform/scheduler/scheduler.module';
     }),
     HealthModule,
   ],
+  providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })
 export class AppModule {}

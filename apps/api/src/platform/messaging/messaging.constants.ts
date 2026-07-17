@@ -12,6 +12,7 @@ export const RoutingKeys = {
   bidPlaced: 'bid.placed',
   settlementCompleted: 'settlement.completed',
   settlementFailed: 'settlement.failed',
+  lotCancelled: 'lot.cancelled',
 } as const;
 
 export const Queues = {

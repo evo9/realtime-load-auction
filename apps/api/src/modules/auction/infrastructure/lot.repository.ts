@@ -23,4 +23,17 @@ export class LotRepository extends BaseRepository<LotEntity> {
     const entity = await this.read().findOneBy({ id });
     return entity ? this.mapper.toDomain(entity) : null;
   }
+
+  async update(tx: TransactionContext, lot: Lot): Promise<Lot> {
+    const saved = await this.repo(tx).save(this.mapper.toEntity(lot));
+    return this.mapper.toDomain(saved);
+  }
+
+  async lockForUpdate(
+    tx: TransactionContext,
+    lotId: string,
+  ): Promise<Lot | null> {
+    const entity = await tx.lockForUpdate(LotEntity, lotId);
+    return entity ? this.mapper.toDomain(entity) : null;
+  }
 }

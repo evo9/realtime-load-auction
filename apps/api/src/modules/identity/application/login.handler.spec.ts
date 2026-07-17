@@ -37,13 +37,14 @@ describe('LoginHandler', () => {
     });
   });
 
-  it('rejects an unknown email without checking the password', async () => {
+  it('rejects an unknown email but still runs a password verify', async () => {
     users.findByEmail.mockResolvedValue(null);
+    hasher.verify.mockResolvedValue(false);
 
     await expect(
       handler.execute('nobody@example.com', 'whatever'),
     ).rejects.toBeInstanceOf(UnauthorizedException);
-    expect(hasher.verify).not.toHaveBeenCalled();
+    expect(hasher.verify).toHaveBeenCalledTimes(1);
   });
 
   it('rejects a wrong password', async () => {
