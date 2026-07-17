@@ -17,6 +17,10 @@ import { CancelLotHandler } from '@src/modules/auction/application/cancel-lot.ha
 import { GetLotHandler } from '@src/modules/auction/application/get-lot.handler';
 import { CreateLotDto } from '@src/modules/auction/api/dto/create-lot.dto';
 import { CancelLotDto } from '@src/modules/auction/api/dto/cancel-lot.dto';
+import {
+  LotResponseDto,
+  toLotResponseDto,
+} from '@src/modules/auction/api/dto/lot-response.dto';
 
 @Controller('lots')
 export class LotsController {
@@ -29,8 +33,12 @@ export class LotsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('shipper')
-  async create(@Body() dto: CreateLotDto, @CurrentUser() user: JwtPayload) {
-    return this.createLot.execute({ ...dto, shipperId: user.sub });
+  async create(
+    @Body() dto: CreateLotDto,
+    @CurrentUser() user: JwtPayload,
+  ): Promise<LotResponseDto> {
+    const lot = await this.createLot.execute({ ...dto, shipperId: user.sub });
+    return toLotResponseDto(lot);
   }
 
   @Post(':id/cancel')
@@ -49,9 +57,9 @@ export class LotsController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  async getOne(@Param('id') id: string) {
+  async getOne(@Param('id') id: string): Promise<LotResponseDto> {
     const lot = await this.getLot.execute(id);
     if (!lot) throw new NotFoundException(`Lot ${id} not found`);
-    return lot;
+    return toLotResponseDto(lot);
   }
 }

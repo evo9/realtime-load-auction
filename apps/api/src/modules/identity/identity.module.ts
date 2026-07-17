@@ -34,6 +34,9 @@ import { UserRepository } from '@src/modules/identity/infrastructure/user.reposi
     JwtAuthGuard,
     RolesGuard,
   ],
-  exports: [JwtAuthGuard, RolesGuard],
+  // JwtModule must be re-exported, not just the guards: @UseGuards() resolves
+  // a guard's own constructor deps inside the consuming module's injector, so
+  // JwtAuthGuard's JwtService dependency needs to be reachable from there too.
+  exports: [JwtAuthGuard, RolesGuard, JwtModule],
 })
 export class IdentityModule {}

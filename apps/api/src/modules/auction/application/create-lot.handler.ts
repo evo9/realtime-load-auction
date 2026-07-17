@@ -1,10 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { UnitOfWork } from '@src/platform/persistence/unit-of-work';
 import { ZSetScheduler } from '@src/platform/scheduler/zset-scheduler';
 import { RedisKeys } from '@src/platform/redis/redis-keys';
 import { Lot } from '@src/modules/auction/domain/lot';
 import {
   CreateLotCommand,
+  InvalidLotError,
   newScheduledLot,
 } from '@src/modules/auction/domain/lot-factory';
 import { LotRepository } from '@src/modules/auction/infrastructure/lot.repository';
@@ -18,7 +19,15 @@ export class CreateLotHandler {
   ) {}
 
   async execute(cmd: CreateLotCommand): Promise<Lot> {
-    const lot = newScheduledLot(cmd);
+    let lot: Lot;
+    try {
+      lot = newScheduledLot(cmd);
+    } catch (err) {
+      if (err instanceof InvalidLotError) {
+        throw new BadRequestException(err.message);
+      }
+      throw err;
+    }
 
     const saved = await this.uow.transaction(async (tx) => {
       return this.lots.insert(tx, lot);
