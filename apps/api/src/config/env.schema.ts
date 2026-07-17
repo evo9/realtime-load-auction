@@ -28,6 +28,14 @@ export const envSchema = z.object({
 
   JWT_SECRET: z.string().min(1),
   JWT_EXPIRES_IN: z.string().default('1h'),
+
+  OUTBOX_POLL_INTERVAL_MS: z.coerce
+    .number()
+    .int()
+    .min(50)
+    .max(60_000)
+    .default(500),
+  OUTBOX_BATCH_SIZE: z.coerce.number().int().min(1).max(1000).default(100),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

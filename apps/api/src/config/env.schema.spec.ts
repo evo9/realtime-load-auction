@@ -19,6 +19,8 @@ const validEnv = {
   REDIS_HOST: 'localhost',
   REDIS_PORT: '6379',
   JWT_SECRET: 'test-secret',
+  OUTBOX_POLL_INTERVAL_MS: '500',
+  OUTBOX_BATCH_SIZE: '100',
 };
 
 describe('envSchema', () => {
