@@ -29,6 +29,19 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
+      'no-restricted-imports': 'off',
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              regex: '\\.\\./',
+              message:
+                'Импорт наружу текущей папки — только через @src/*. Относительный путь допустим лишь до соседа по той же папке.',
+            },
+          ],
+        },
+      ],
       "prettier/prettier": ["error", { endOfLine: "auto" }],
     },
   },

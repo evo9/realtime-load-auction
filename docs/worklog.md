@@ -25,6 +25,12 @@
 
 <!-- записи ниже, новые сверху -->
 
+## 2026-07-16 — M1-02 NestJS scaffold: config, логирование, healthcheck
+
+**Что:** Бутстрап-слой `apps/api`: типизированный `AppConfigService` поверх `@nestjs/config` с zod-схемой (`validateEnv` — читаемое сообщение об отсутствующих переменных), собственный `apps/api/.env`/`.env.example` (резолвится абсолютным путём от `dist`, не зависит от cwd), `nestjs-pino` со структурными JSON-логами и корреляцией по `x-request-id`, `helmet` + глобальный `ValidationPipe`, `GET /health` liveness-эндпоинт. `make setup` создаёт оба `.env`-файла и ставит зависимости обоих apps. Убран дефолтный hello-world скаффолд.
+**Файлы:** `apps/api/src/config/`, `apps/api/src/health/`, `apps/api/src/app.module.ts`, `apps/api/src/main.ts`, `apps/api/.env.example`, `Makefile` (цель `setup`), `apps/api/tsconfig.json` (`@src/*` алиас — пока только для тайп-чекинга/тестов)
+**Проверено:** `pnpm -C apps/api lint/test/build` зелёные; `GET /health` → `200 {"status":"ok"}` с JSON-логом и `req.id`; при отсутствии обязательной env — понятная ошибка на bootstrap, процесс падает. Ревью `load-auction-reviewer` — **PASS**.
+
 ## 2026-07-16 — M1-01 docker-compose + Makefile
 
 **Что:** Локальная инфра одной командой: `docker-compose.yml` (postgres:16-alpine, rabbitmq:3-management-alpine, redis:7-alpine с appendonly) с healthcheck на каждом сервисе, `Makefile` (`up/down/logs/ps/seed`-заглушка), `.env.example` с параметрами подключения, корневой `README.md` с коротким сниппетом запуска.
