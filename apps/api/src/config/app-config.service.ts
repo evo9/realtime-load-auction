@@ -65,4 +65,13 @@ export class AppConfigService {
       expiresIn: this.config.get('JWT_EXPIRES_IN', { infer: true }),
     };
   }
+
+  get outbox() {
+    return {
+      pollIntervalMs: this.config.get('OUTBOX_POLL_INTERVAL_MS', {
+        infer: true,
+      }),
+      batchSize: this.config.get('OUTBOX_BATCH_SIZE', { infer: true }),
+    };
+  }
 }
