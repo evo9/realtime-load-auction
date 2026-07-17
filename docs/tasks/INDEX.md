@@ -18,7 +18,7 @@
 - [x] [M2-02](M2-02-platform-messaging.md) — platform/messaging: топология, publisher, base consumer, QoS, retry/DLX
 - [x] [M2-03](M2-03-platform-outbox.md) — platform/outbox: таблица + relay
 - [x] [M2-04](M2-04-platform-scheduler.md) — platform/scheduler: ZSET-планировщик
-- [ ] [M2-05](M2-05-auction-domain.md) — auction: домен лота + state-machine + миграция
+- [x] [M2-05](M2-05-auction-domain.md) — auction: домен лота + state-machine + миграция
 - [ ] [M2-06](M2-06-auction-commands.md) — auction: команды Create/Open/Close/Cancel + scheduler + outbox
 - [ ] [M2-07](M2-07-listing-readmodel.md) — listing: read-model (проекция) + query-API
 - [ ] [M2-08](M2-08-seed.md) — seed: шипперы, пользователи, лоты
