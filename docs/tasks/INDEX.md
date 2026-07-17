@@ -11,7 +11,7 @@
 - [x] [M1-02](M1-02-nest-scaffold.md) — NestJS scaffold: config, логи, healthcheck
 - [x] [M1-03](M1-03-platform-persistence.md) — platform/persistence: TypeORM, UoW, миграции
 - [x] [M1-04](M1-04-platform-stubs.md) — платформенные модули-заглушки + проводка AppModule
-- [ ] [M1-05](M1-05-identity.md) — identity: пользователи, роли, JWT, login
+- [x] [M1-05](M1-05-identity.md) — identity: пользователи, роли, JWT, login
 
 ## M2 — лоты
 - [x] [M2-01](M2-01-platform-redis.md) — platform/redis: Lock, RateLimiter, PubSub, CAS-каркас

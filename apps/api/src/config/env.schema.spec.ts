@@ -18,7 +18,7 @@ const validEnv = {
   RABBITMQ_RETRY_MAX_TTL_MS: '60000',
   REDIS_HOST: 'localhost',
   REDIS_PORT: '6379',
-  JWT_SECRET: 'test-secret',
+  JWT_SECRET: 'test-secret-at-least-32-characters-long',
   OUTBOX_POLL_INTERVAL_MS: '500',
   OUTBOX_BATCH_SIZE: '100',
   SCHEDULER_TICK_INTERVAL_MS: '500',

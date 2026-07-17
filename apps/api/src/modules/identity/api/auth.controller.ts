@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { LoginHandler } from '@src/modules/identity/application/login.handler';
 import { LoginDto } from '@src/modules/identity/api/dto/login.dto';
 
@@ -8,6 +9,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60_000 } })
   login(@Body() dto: LoginDto) {
     return this.loginHandler.execute(dto.email, dto.password);
   }
