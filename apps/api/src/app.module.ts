@@ -4,12 +4,24 @@ import { LoggerModule } from 'nestjs-pino';
 import { AppConfigModule } from '@src/config/app-config.module';
 import { AppConfigService } from '@src/config/app-config.service';
 import { HealthModule } from '@src/health/health.module';
+import { IdentityModule } from '@src/modules/identity/identity.module';
+import { IdempotencyModule } from '@src/platform/idempotency/idempotency.module';
+import { MessagingModule } from '@src/platform/messaging/messaging.module';
+import { OutboxModule } from '@src/platform/outbox/outbox.module';
 import { PersistenceModule } from '@src/platform/persistence/persistence.module';
+import { RedisModule } from '@src/platform/redis/redis.module';
+import { SchedulerModule } from '@src/platform/scheduler/scheduler.module';
 
 @Module({
   imports: [
     AppConfigModule,
     PersistenceModule,
+    RedisModule,
+    MessagingModule,
+    OutboxModule,
+    IdempotencyModule,
+    SchedulerModule,
+    IdentityModule,
     LoggerModule.forRootAsync({
       imports: [AppConfigModule],
       inject: [AppConfigService],

@@ -42,4 +42,11 @@ export class AppConfigService {
       port: this.config.get('REDIS_PORT', { infer: true }),
     };
   }
+
+  get jwt() {
+    return {
+      secret: this.config.get('JWT_SECRET', { infer: true }),
+      expiresIn: this.config.get('JWT_EXPIRES_IN', { infer: true }),
+    };
+  }
 }

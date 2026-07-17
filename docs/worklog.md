@@ -1,6 +1,8 @@
 # Worklog
 
-Журнал выполненных задач: что реально сделано, где это лежит и чем доказано. Пишется в конце `/task-done` — **после** того, как ревьюер вернул PASS. Записи не редактируются и не удаляются: только append сверху.
+Журнал выполненных задач: что реально сделано, где это лежит и чем доказано. Запись появляется **сразу после того, как ревьюер вернул PASS, и до отчёта о готовности в чате** — это последнее действие задачи, а не первое действие следующей. Команда `/task-done` — лишь один из способов прогнать закрывающий конвейер, но не триггер записи: без неё запись всё равно обязательна. Записи не редактируются и не удаляются: только append сверху.
+
+Задним числом не дописываем. Если обнаружилась выполненная, но не залогированная задача — не латай журнал молча: скажи об этом и прогони закрывающий конвейер (ревью + зелёные lint/build/test), иначе запись будет декларацией, а не фактом.
 
 Назначение — быстрый ответ на «что уже готово и как это проверялось» в начале новой сессии, без раскопок в git log. Статус задач при этом отмечается галочкой в [tasks/INDEX.md](tasks/INDEX.md); детали — здесь.
 
@@ -24,6 +26,18 @@
 ---
 
 <!-- записи ниже, новые сверху -->
+
+## 2026-07-16 — M1-04 платформенные модули-заглушки + проводка AppModule
+
+**Что:** `AppModule` доведён до формы §9.1: `RedisModule`, `MessagingModule`, `OutboxModule`, `IdempotencyModule`, `SchedulerModule` зарегистрированы после `PersistenceModule` в каноническом порядке. `redis` — единственный реально живой из пяти: `ioredis`-клиент за DI-токеном `REDIS_CLIENT`, читает `config.redis`, graceful shutdown через `OnModuleDestroy` + `app.enableShutdownHooks()`. `messaging` кладёт секцию конфига (`config.rabbitmq`) в токен `RABBITMQ_OPTIONS` под будущее подключение в M2-02, без реального соединения (`amqplib` сознательно не ставился — это объём M2-02). `outbox`/`idempotency`/`scheduler` — буквально пустые `@Module({})`: у них нет собственной секции конфига до M2-03/M3-01/M2-04. `GET /health` теперь пингует и Postgres, и Redis, возвращает по какому компоненту упало.
+**Файлы:** `apps/api/src/platform/{redis,messaging,outbox,idempotency,scheduler}/`, `apps/api/src/app.module.ts`, `apps/api/src/health/health.controller.ts`, `apps/api/src/main.ts` (`enableShutdownHooks`), `apps/api/package.json` (`ioredis`, `@testcontainers/redis`)
+**Проверено:** `pnpm -C apps/api lint/test/test:e2e/test:integration/build` зелёные; `test:integration` — `ioredis` реально подключается к эфемерному Redis (testcontainers) и отвечает на `ping`; `/health` → `200 {status:ok,db:ok,redis:ok}` при живой инфре, `503` с точным указанием упавшего компонента при остановке Postgres или Redis по отдельности, восстанавливается после рестарта контейнера. Отдельно проверено `SIGTERM`: `ioredis`-соединение в `redis-cli client list` реально исчезает после сигнала (не просто "процесс завершился") — граница shutdown-хука доказана, а не задекларирована. Ревью `load-auction-reviewer` — **PASS WITH WARNINGS** → warning (`enableShutdownHooks` отсутствовал) исправлен и повторно проверен.
+
+## 2026-07-16 — M1-03 platform/persistence: TypeORM, UnitOfWork, миграции
+
+**Что:** Слой доступа к Postgres на TypeORM: `PersistenceModule` (`TypeOrmModule.forRootAsync` через `AppConfigService`, `autoLoadEntities`), `UnitOfWork.transaction(work)` с `TransactionContext` (manager + generic `lockForUpdate` через `pessimistic_write` + `outbox`-порт), `BaseRepository`/`Mapper` как контракты под будущие сущности (M2). Outbox подключён как DI-порт (`OUTBOX_PORT`, дефолт — понятная ошибка «не настроен, см. M2-03»), не как прямая зависимость на ещё не существующий `platform/outbox`. Миграции — `typeorm-ts-node-commonjs` CLI поверх `data-source.ts`, пустая baseline-миграция. `GET /health` теперь реально пингует БД (`SELECT 1`, 503 при недоступности).
+**Файлы:** `apps/api/src/platform/persistence/`, `apps/api/src/health/health.controller.ts`, `apps/api/src/app.module.ts`, `apps/api/jest-integration.json`, `apps/api/package.json` (`migration:*`, `test:integration`)
+**Проверено:** `pnpm -C apps/api lint/test/test:e2e/test:integration/build` зелёные; `test:integration` — commit/rollback/`lockForUpdate` на реальном Postgres через `@testcontainers/postgresql`; `migration:run`/`revert` применяют/откатывают baseline на живом Postgres из `make up`; `/health` → 200 при живой БД, 503 при остановленном контейнере, восстанавливается после рестарта. Ревью `load-auction-reviewer` — **PASS**.
 
 ## 2026-07-16 — M1-02 NestJS scaffold: config, логирование, healthcheck
 

@@ -23,11 +23,10 @@ Say: "Review the following files: [list changed files]"
 - **WARNING** — fix immediately, then re-review  
 - **SUGGESTION** — note it, fix if trivial, otherwise leave for later
 
-## Step 4: Confirm completion
+## Step 4: Confirm the reviewer passed
 
-Only after the reviewer returns **PASS** or all CRITICAL/WARNING issues are resolved:
-- Report the task as done
-- Summarise what was implemented and what the reviewer found
+Only after the reviewer returns **PASS** or all CRITICAL/WARNING issues are resolved.
+Do not report yet — record first.
 
 ## Step 5: Record the work
 
@@ -37,3 +36,9 @@ Once step 4 holds — and not before:
 2. Tick the task in `docs/tasks/INDEX.md`: `- [ ]` → `- [x]`.
 
 Use today's real date (`date +%F`), not an assumed one. Never log a task the reviewer hasn't passed, and never record lint/build/test as green without having run them.
+
+Это дублирующий страховочный проход. Штатно запись уже сделана в шаге 7 конвейера
+(`workflow.md` §3) — команда не является её триггером. Если запись уже есть, не дублируй.
+
+## Step 6: Report
+Summarise what was implemented and what the reviewer found.
