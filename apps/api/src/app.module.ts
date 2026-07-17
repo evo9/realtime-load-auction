@@ -4,6 +4,7 @@ import { LoggerModule } from 'nestjs-pino';
 import { AppConfigModule } from '@src/config/app-config.module';
 import { AppConfigService } from '@src/config/app-config.service';
 import { HealthModule } from '@src/health/health.module';
+import { AuctionModule } from '@src/modules/auction/auction.module';
 import { IdentityModule } from '@src/modules/identity/identity.module';
 import { IdempotencyModule } from '@src/platform/idempotency/idempotency.module';
 import { MessagingModule } from '@src/platform/messaging/messaging.module';
@@ -22,6 +23,7 @@ import { SchedulerModule } from '@src/platform/scheduler/scheduler.module';
     IdempotencyModule,
     SchedulerModule,
     IdentityModule,
+    AuctionModule,
     LoggerModule.forRootAsync({
       imports: [AppConfigModule],
       inject: [AppConfigService],
