@@ -22,7 +22,8 @@
     "typeorm": "typeorm-ts-node-commonjs",
     "migration:generate": "pnpm typeorm migration:generate -d src/platform/persistence/data-source.ts",
     "migration:run": "pnpm typeorm migration:run -d src/platform/persistence/data-source.ts",
-    "migration:revert": "pnpm typeorm migration:revert -d src/platform/persistence/data-source.ts"
+    "migration:revert": "pnpm typeorm migration:revert -d src/platform/persistence/data-source.ts",
+    "seed": "ts-node -r tsconfig-paths/register src/seed/run-seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

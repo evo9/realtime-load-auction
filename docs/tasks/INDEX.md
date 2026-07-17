@@ -21,7 +21,7 @@
 - [x] [M2-05](M2-05-auction-domain.md) — auction: домен лота + state-machine + миграция
 - [x] [M2-06](M2-06-auction-commands.md) — auction: команды Create/Open/Close/Cancel + scheduler + outbox
 - [x] [M2-07](M2-07-listing-readmodel.md) — listing: read-model (проекция) + query-API
-- [ ] [M2-08](M2-08-seed.md) — seed: шипперы, пользователи, лоты
+- [x] [M2-08](M2-08-seed.md) — seed: шипперы, пользователи, лоты
 
 ## M3 — горячий путь
 - [ ] [M3-01](M3-01-platform-idempotency.md) — platform/idempotency: API-интерсептор + дедуп консьюмеров
