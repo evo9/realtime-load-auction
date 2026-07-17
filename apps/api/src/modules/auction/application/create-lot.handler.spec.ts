@@ -2,7 +2,9 @@ import { BadRequestException } from '@nestjs/common';
 import { CreateLotCommand } from '@src/modules/auction/domain/lot-factory';
 import { CreateLotHandler } from './create-lot.handler';
 
-function makeCommand(overrides: Partial<CreateLotCommand> = {}): CreateLotCommand {
+function makeCommand(
+  overrides: Partial<CreateLotCommand> = {},
+): CreateLotCommand {
   return {
     shipperId: 'shipper-1',
     origin: 'Chicago, IL',
