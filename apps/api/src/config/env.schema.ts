@@ -17,6 +17,11 @@ export const envSchema = z.object({
   RABBITMQ_MANAGEMENT_PORT: z.coerce.number(),
   RABBITMQ_DEFAULT_USER: z.string().min(1),
   RABBITMQ_DEFAULT_PASS: z.string().min(1),
+  RABBITMQ_PREFETCH: z.coerce.number().int().min(1).default(10),
+  RABBITMQ_RETRY_LIMIT: z.coerce.number().default(3),
+  RABBITMQ_RETRY_BASE_TTL_MS: z.coerce.number().default(5000),
+  RABBITMQ_RETRY_MULTIPLIER: z.coerce.number().default(3),
+  RABBITMQ_RETRY_MAX_TTL_MS: z.coerce.number().default(60000),
 
   REDIS_HOST: z.string().min(1),
   REDIS_PORT: z.coerce.number(),

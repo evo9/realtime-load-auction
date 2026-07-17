@@ -15,7 +15,7 @@
 
 ## M2 — лоты
 - [x] [M2-01](M2-01-platform-redis.md) — platform/redis: Lock, RateLimiter, PubSub, CAS-каркас
-- [ ] [M2-02](M2-02-platform-messaging.md) — platform/messaging: топология, publisher, base consumer, QoS, retry/DLX
+- [x] [M2-02](M2-02-platform-messaging.md) — platform/messaging: топология, publisher, base consumer, QoS, retry/DLX
 - [ ] [M2-03](M2-03-platform-outbox.md) — platform/outbox: таблица + relay
 - [ ] [M2-04](M2-04-platform-scheduler.md) — platform/scheduler: ZSET-планировщик
 - [ ] [M2-05](M2-05-auction-domain.md) — auction: домен лота + state-machine + миграция

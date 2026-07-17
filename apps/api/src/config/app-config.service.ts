@@ -36,6 +36,22 @@ export class AppConfigService {
     };
   }
 
+  get messaging() {
+    return {
+      prefetch: this.config.get('RABBITMQ_PREFETCH', { infer: true }),
+      retryLimit: this.config.get('RABBITMQ_RETRY_LIMIT', { infer: true }),
+      retryBaseTtlMs: this.config.get('RABBITMQ_RETRY_BASE_TTL_MS', {
+        infer: true,
+      }),
+      retryMultiplier: this.config.get('RABBITMQ_RETRY_MULTIPLIER', {
+        infer: true,
+      }),
+      retryMaxTtlMs: this.config.get('RABBITMQ_RETRY_MAX_TTL_MS', {
+        infer: true,
+      }),
+    };
+  }
+
   get redis() {
     return {
       host: this.config.get('REDIS_HOST', { infer: true }),
