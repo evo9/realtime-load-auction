@@ -9,6 +9,7 @@ import { HealthModule } from '@src/health/health.module';
 import { AuctionModule } from '@src/modules/auction/auction.module';
 import { AuctionSchedulerWiringModule } from '@src/modules/auction/auction-scheduler-wiring.module';
 import { IdentityModule } from '@src/modules/identity/identity.module';
+import { ListingModule } from '@src/modules/listing/listing.module';
 import { IdempotencyModule } from '@src/platform/idempotency/idempotency.module';
 import { MessagingModule } from '@src/platform/messaging/messaging.module';
 import { OutboxModule } from '@src/platform/outbox/outbox.module';
@@ -29,6 +30,7 @@ import { SchedulerModule } from '@src/platform/scheduler/scheduler.module';
     IdentityModule,
     AuctionModule,
     AuctionSchedulerWiringModule,
+    ListingModule,
     LoggerModule.forRootAsync({
       imports: [AppConfigModule],
       inject: [AppConfigService],
