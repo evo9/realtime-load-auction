@@ -1,0 +1,30 @@
+export const LOCK_RELEASE = `
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+  return redis.call('DEL', KEYS[1])
+else
+  return 0
+end
+`;
+
+// KEYS[1]=lot:{id}:high  KEYS[2]=lot:{id}:status
+// ARGV[1]=amount  ARGV[2]=carrierId  ARGV[3]=bidId
+export const CAS_BEAT_HIGH_BID = `
+redis.call('HSET', KEYS[1], 'amount', ARGV[1], 'carrierId', ARGV[2], 'bidId', ARGV[3])
+return {1, 'accepted'}
+`;
+
+// KEYS[1]=zset  ARGV[1]=now(ms)  ARGV[2]=window(ms)  ARGV[3]=limit  ARGV[4]=member
+export const RATE_LIMIT_HIT = `
+local now = tonumber(ARGV[1])
+local window = tonumber(ARGV[2])
+local limit = tonumber(ARGV[3])
+-- drop entries that fell out of the sliding window before counting
+redis.call('ZREMRANGEBYSCORE', KEYS[1], 0, now - window)
+local count = redis.call('ZCARD', KEYS[1])
+if count < limit then
+  redis.call('ZADD', KEYS[1], now, ARGV[4])
+  redis.call('PEXPIRE', KEYS[1], window)
+  return {1, limit - count - 1}
+end
+return {0, 0}
+`;
