@@ -19,4 +19,5 @@ ps:
 	docker compose ps
 
 seed:
-	@echo "seed: not implemented yet (see M2-08)"
+	pnpm -C apps/api migration:run
+	pnpm -C apps/api seed
