@@ -21,6 +21,9 @@ const validEnv = {
   JWT_SECRET: 'test-secret',
   OUTBOX_POLL_INTERVAL_MS: '500',
   OUTBOX_BATCH_SIZE: '100',
+  SCHEDULER_TICK_INTERVAL_MS: '500',
+  SCHEDULER_BATCH_SIZE: '100',
+  SCHEDULER_RETRY_DELAY_MS: '5000',
 };
 
 describe('envSchema', () => {

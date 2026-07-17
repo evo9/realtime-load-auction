@@ -36,6 +36,20 @@ export const envSchema = z.object({
     .max(60_000)
     .default(500),
   OUTBOX_BATCH_SIZE: z.coerce.number().int().min(1).max(1000).default(100),
+
+  SCHEDULER_TICK_INTERVAL_MS: z.coerce
+    .number()
+    .int()
+    .min(50)
+    .max(60_000)
+    .default(500),
+  SCHEDULER_BATCH_SIZE: z.coerce.number().int().min(1).max(1000).default(100),
+  SCHEDULER_RETRY_DELAY_MS: z.coerce
+    .number()
+    .int()
+    .min(100)
+    .max(300_000)
+    .default(5000),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

@@ -74,4 +74,16 @@ export class AppConfigService {
       batchSize: this.config.get('OUTBOX_BATCH_SIZE', { infer: true }),
     };
   }
+
+  get scheduler() {
+    return {
+      tickIntervalMs: this.config.get('SCHEDULER_TICK_INTERVAL_MS', {
+        infer: true,
+      }),
+      batchSize: this.config.get('SCHEDULER_BATCH_SIZE', { infer: true }),
+      retryDelayMs: this.config.get('SCHEDULER_RETRY_DELAY_MS', {
+        infer: true,
+      }),
+    };
+  }
 }
