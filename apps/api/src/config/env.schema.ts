@@ -50,6 +50,25 @@ export const envSchema = z.object({
     .min(100)
     .max(300_000)
     .default(5000),
+
+  IDEMPOTENCY_INPROGRESS_TTL_MS: z.coerce
+    .number()
+    .int()
+    .min(1000)
+    .max(300_000)
+    .default(30000),
+  IDEMPOTENCY_DONE_TTL_MS: z.coerce
+    .number()
+    .int()
+    .min(1000)
+    .max(3_600_000)
+    .default(600000),
+  MSG_DEDUP_TTL_MS: z.coerce
+    .number()
+    .int()
+    .min(1000)
+    .max(86_400_000)
+    .default(900000),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

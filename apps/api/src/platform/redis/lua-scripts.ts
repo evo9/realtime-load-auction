@@ -13,6 +13,16 @@ redis.call('HSET', KEYS[1], 'amount', ARGV[1], 'carrierId', ARGV[2], 'bidId', AR
 return {1, 'accepted'}
 `;
 
+// KEYS[1]=idem:{key}  ARGV[1]=in-progress envelope JSON  ARGV[2]=inProgressTtlMs
+export const IDEM_BEGIN = `
+local existing = redis.call('GET', KEYS[1])
+if existing then
+  return existing
+end
+redis.call('SET', KEYS[1], ARGV[1], 'PX', tonumber(ARGV[2]))
+return false
+`;
+
 // KEYS[1]=zset  ARGV[1]=now(ms)  ARGV[2]=window(ms)  ARGV[3]=limit  ARGV[4]=member
 export const RATE_LIMIT_HIT = `
 local now = tonumber(ARGV[1])

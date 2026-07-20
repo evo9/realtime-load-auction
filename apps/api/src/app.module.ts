@@ -37,6 +37,7 @@ import { SchedulerModule } from '@src/platform/scheduler/scheduler.module';
       useFactory: (config: AppConfigService) => ({
         pinoHttp: {
           level: config.nodeEnv === 'production' ? 'info' : 'debug',
+          redact: ['req.headers["idempotency-key"]'],
           genReqId: (req, res) => {
             const existing = req.headers['x-request-id'];
             const id = typeof existing === 'string' ? existing : randomUUID();

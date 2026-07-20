@@ -24,7 +24,7 @@
 - [x] [M2-08](M2-08-seed.md) — seed: шипперы, пользователи, лоты
 
 ## M3 — горячий путь
-- [ ] [M3-01](M3-01-platform-idempotency.md) — platform/idempotency: API-интерсептор + дедуп консьюмеров
+- [x] [M3-01](M3-01-platform-idempotency.md) — platform/idempotency: API-интерсептор + дедуп консьюмеров
 - [ ] [M3-02](M3-02-cas-lua.md) — Lua CAS + reconciliation
 - [ ] [M3-03](M3-03-bidding-hot-path.md) — bidding: горячий путь PlaceBid (idem→CAS→TX+outbox)
 - [ ] [M3-04](M3-04-bidding-queries.md) — bidding: query-путь (история, мои ставки)

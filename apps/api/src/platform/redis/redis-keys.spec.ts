@@ -18,7 +18,9 @@ describe('RedisKeys', () => {
   });
 
   it('msgDedup', () => {
-    expect(RedisKeys.msgDedup('msg-42')).toBe('msg:dedup:msg-42');
+    expect(RedisKeys.msgDedup('notification.q', 'msg-42')).toBe(
+      'msg:dedup:notification.q:msg-42',
+    );
   });
 
   it('scheduleOpen', () => {

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 
 export interface DedupPort {
-  seen(messageId: string): Promise<boolean>;
-  mark(messageId: string): Promise<void>;
+  seen(queue: string, messageId: string): Promise<boolean>;
+  mark(queue: string, messageId: string): Promise<void>;
 }
 
 export const DEDUP_PORT = Symbol('DEDUP_PORT');

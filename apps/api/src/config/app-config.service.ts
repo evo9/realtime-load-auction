@@ -86,4 +86,14 @@ export class AppConfigService {
       }),
     };
   }
+
+  get idempotency() {
+    return {
+      inProgressTtlMs: this.config.get('IDEMPOTENCY_INPROGRESS_TTL_MS', {
+        infer: true,
+      }),
+      doneTtlMs: this.config.get('IDEMPOTENCY_DONE_TTL_MS', { infer: true }),
+      msgDedupTtlMs: this.config.get('MSG_DEDUP_TTL_MS', { infer: true }),
+    };
+  }
 }

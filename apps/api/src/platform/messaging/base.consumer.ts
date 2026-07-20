@@ -66,14 +66,13 @@ export abstract class BaseConsumer<T = unknown> implements OnModuleInit {
       return;
     }
 
-    if (await this.dedup.seen(msg.messageId)) {
-      channel.ack(raw);
-      return;
-    }
-
     try {
+      if (await this.dedup.seen(this.queue, msg.messageId)) {
+        channel.ack(raw);
+        return;
+      }
       await this.process(msg);
-      await this.dedup.mark(msg.messageId);
+      await this.dedup.mark(this.queue, msg.messageId);
       channel.ack(raw);
     } catch (err) {
       await this.retryOrDlq(msg, raw, channel, err);

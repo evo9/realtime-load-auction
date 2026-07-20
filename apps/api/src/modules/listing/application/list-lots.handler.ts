@@ -41,7 +41,7 @@ function toListingLot(entity: ListingLotEntity): ListingLot {
 
 @Injectable()
 export class ListLotsHandler {
-  constructor(private readonly repository: ListingLotRepository) {}
+  constructor(private readonly lots: ListingLotRepository) {}
 
   async execute(
     query: ListLotsQuery,
@@ -49,7 +49,7 @@ export class ListLotsHandler {
     const limit = query.limit ?? DEFAULT_LIMIT;
     const cursor = query.cursor ? decodeCursor(query.cursor) : undefined;
 
-    const rows = await this.repository.list({
+    const rows = await this.lots.list({
       status: query.status,
       equipmentType: query.equipmentType,
       origin: query.origin,
