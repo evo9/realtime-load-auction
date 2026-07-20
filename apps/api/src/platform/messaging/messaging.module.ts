@@ -5,9 +5,11 @@ import { AppConfigService } from '@src/config/app-config.service';
 import { AMQP_CONNECTION } from '@src/platform/messaging/amqp-connection.token';
 import { AmqpLifecycle } from '@src/platform/messaging/amqp-lifecycle';
 import { MESSAGING_CONFIG } from '@src/platform/messaging/messaging.config.token';
-import { DEDUP_PORT, NullDedupPort } from '@src/platform/messaging/dedup.port';
+import { DEDUP_PORT } from '@src/platform/messaging/dedup.port';
 import { Publisher } from '@src/platform/messaging/publisher';
 import { TopologyService } from '@src/platform/messaging/topology';
+import { IdempotencyModule } from '@src/platform/idempotency/idempotency.module';
+import { RedisDedupPort } from '@src/platform/idempotency/redis-dedup.port';
 
 export const RABBITMQ_OPTIONS = Symbol('RABBITMQ_OPTIONS');
 
@@ -15,7 +17,7 @@ export { AMQP_CONNECTION, MESSAGING_CONFIG, DEDUP_PORT };
 
 @Global()
 @Module({
-  imports: [AppConfigModule],
+  imports: [AppConfigModule, IdempotencyModule],
   providers: [
     {
       provide: RABBITMQ_OPTIONS,
@@ -40,7 +42,7 @@ export { AMQP_CONNECTION, MESSAGING_CONFIG, DEDUP_PORT };
     },
     {
       provide: DEDUP_PORT,
-      useClass: NullDedupPort,
+      useExisting: RedisDedupPort,
     },
     {
       provide: AmqpLifecycle,

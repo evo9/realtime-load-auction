@@ -3,7 +3,8 @@ export const RedisKeys = {
   lotStatus: (lotId: string) => `lot:${lotId}:status`,
   lotLock: (lotId: string) => `lot:${lotId}:lock`,
   idem: (key: string) => `idem:${key}`,
-  msgDedup: (messageId: string) => `msg:dedup:${messageId}`,
+  msgDedup: (queue: string, messageId: string) =>
+    `msg:dedup:${queue}:${messageId}`,
   scheduleOpen: () => `auction:schedule:open`,
   scheduleClose: () => `auction:schedule:close`,
   rateLimit: (carrierId: string, lotId: string) =>
