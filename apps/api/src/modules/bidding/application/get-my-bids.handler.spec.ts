@@ -6,6 +6,7 @@ import {
 import { GetMyBidsHandler } from '@src/modules/bidding/application/get-my-bids.handler';
 import type { Lot } from '@src/modules/auction/domain/lot';
 import type { BidEntity } from '@src/modules/bidding/infrastructure/bid.entity';
+import type { HighBidCandidate } from '@src/platform/redis/cas.service';
 
 function makeRow(overrides: Partial<BidEntity> = {}): BidEntity {
   return {
@@ -42,20 +43,30 @@ function makeLot(overrides: Partial<Lot> = {}): Lot {
   };
 }
 
+function bestMap(
+  entries: Array<[string, HighBidCandidate]>,
+): Map<string, HighBidCandidate> {
+  return new Map(entries);
+}
+
 describe('GetMyBidsHandler', () => {
-  let bids: { listByCarrier: jest.Mock; findCurrentBest: jest.Mock };
-  let lots: { findById: jest.Mock };
+  let bids: {
+    listByCarrier: jest.Mock;
+    findCurrentBestForLots: jest.Mock;
+  };
+  let lots: { findByIds: jest.Mock };
   let handler: GetMyBidsHandler;
 
   beforeEach(() => {
-    bids = { listByCarrier: jest.fn(), findCurrentBest: jest.fn() };
-    lots = { findById: jest.fn() };
+    bids = {
+      listByCarrier: jest.fn().mockResolvedValue([]),
+      findCurrentBestForLots: jest.fn().mockResolvedValue(new Map()),
+    };
+    lots = { findByIds: jest.fn().mockResolvedValue([]) };
     handler = new GetMyBidsHandler(bids as never, lots as never);
   });
 
   it('passes cursor/limit through to repository.listByCarrier as-is', async () => {
-    bids.listByCarrier.mockResolvedValue([]);
-
     await handler.execute({ carrierId: 'carrier-1', limit: 5 });
 
     expect(bids.listByCarrier).toHaveBeenCalledWith('carrier-1', {
@@ -65,8 +76,6 @@ describe('GetMyBidsHandler', () => {
   });
 
   it('applies the default limit of 20 when none is given', async () => {
-    bids.listByCarrier.mockResolvedValue([]);
-
     await handler.execute({ carrierId: 'carrier-1' });
 
     expect(bids.listByCarrier).toHaveBeenCalledWith(
@@ -77,12 +86,12 @@ describe('GetMyBidsHandler', () => {
 
   it('reports "leading" when the bid is the current best on an open lot', async () => {
     bids.listByCarrier.mockResolvedValue([makeRow({ id: 'bid-1' })]);
-    lots.findById.mockResolvedValue(makeLot({ status: 'open' }));
-    bids.findCurrentBest.mockResolvedValue({
-      amount: 90000,
-      carrierId: 'carrier-1',
-      bidId: 'bid-1',
-    });
+    lots.findByIds.mockResolvedValue([makeLot({ status: 'open' })]);
+    bids.findCurrentBestForLots.mockResolvedValue(
+      bestMap([
+        ['lot-1', { amount: 90000, carrierId: 'carrier-1', bidId: 'bid-1' }],
+      ]),
+    );
 
     const result = await handler.execute({ carrierId: 'carrier-1' });
 
@@ -91,12 +100,12 @@ describe('GetMyBidsHandler', () => {
 
   it('reports "outbid" when another bid is the current best on an open/closing lot', async () => {
     bids.listByCarrier.mockResolvedValue([makeRow({ id: 'bid-1' })]);
-    lots.findById.mockResolvedValue(makeLot({ status: 'closing' }));
-    bids.findCurrentBest.mockResolvedValue({
-      amount: 80000,
-      carrierId: 'carrier-2',
-      bidId: 'bid-2',
-    });
+    lots.findByIds.mockResolvedValue([makeLot({ status: 'closing' })]);
+    bids.findCurrentBestForLots.mockResolvedValue(
+      bestMap([
+        ['lot-1', { amount: 80000, carrierId: 'carrier-2', bidId: 'bid-2' }],
+      ]),
+    );
 
     const result = await handler.execute({ carrierId: 'carrier-1' });
 
@@ -105,10 +114,9 @@ describe('GetMyBidsHandler', () => {
 
   it('reports "won" when the lot is settled and winningBidId matches', async () => {
     bids.listByCarrier.mockResolvedValue([makeRow({ id: 'bid-1' })]);
-    lots.findById.mockResolvedValue(
+    lots.findByIds.mockResolvedValue([
       makeLot({ status: 'settled', winningBidId: 'bid-1' }),
-    );
-    bids.findCurrentBest.mockResolvedValue(null);
+    ]);
 
     const result = await handler.execute({ carrierId: 'carrier-1' });
 
@@ -117,10 +125,9 @@ describe('GetMyBidsHandler', () => {
 
   it('reports "lost" when the lot is settled and winningBidId does not match', async () => {
     bids.listByCarrier.mockResolvedValue([makeRow({ id: 'bid-1' })]);
-    lots.findById.mockResolvedValue(
+    lots.findByIds.mockResolvedValue([
       makeLot({ status: 'settled', winningBidId: 'bid-9' }),
-    );
-    bids.findCurrentBest.mockResolvedValue(null);
+    ]);
 
     const result = await handler.execute({ carrierId: 'carrier-1' });
 
@@ -129,29 +136,30 @@ describe('GetMyBidsHandler', () => {
 
   it('reports "outbid" when the lot cannot be found', async () => {
     bids.listByCarrier.mockResolvedValue([makeRow({ id: 'bid-1' })]);
-    lots.findById.mockResolvedValue(null);
-    bids.findCurrentBest.mockResolvedValue(null);
+    lots.findByIds.mockResolvedValue([]);
 
     const result = await handler.execute({ carrierId: 'carrier-1' });
 
     expect(result.items[0].status).toBe('outbid');
   });
 
-  it('batches lots.findById and bids.findCurrentBest exactly once per unique lotId', async () => {
+  it('batches lot + current-best lookups into one call per unique lotId set', async () => {
     bids.listByCarrier.mockResolvedValue([
       makeRow({ id: 'bid-1', lotId: 'lot-1' }),
       makeRow({ id: 'bid-2', lotId: 'lot-1' }),
       makeRow({ id: 'bid-3', lotId: 'lot-2' }),
     ]);
-    lots.findById.mockResolvedValue(makeLot({ status: 'open' }));
-    bids.findCurrentBest.mockResolvedValue(null);
+    lots.findByIds.mockResolvedValue([makeLot({ status: 'open' })]);
 
     await handler.execute({ carrierId: 'carrier-1' });
 
-    expect(lots.findById).toHaveBeenCalledTimes(2);
-    expect(bids.findCurrentBest).toHaveBeenCalledTimes(2);
-    expect(lots.findById).toHaveBeenCalledWith('lot-1');
-    expect(lots.findById).toHaveBeenCalledWith('lot-2');
+    expect(lots.findByIds).toHaveBeenCalledTimes(1);
+    expect(bids.findCurrentBestForLots).toHaveBeenCalledTimes(1);
+    expect(lots.findByIds).toHaveBeenCalledWith(['lot-1', 'lot-2']);
+    expect(bids.findCurrentBestForLots).toHaveBeenCalledWith([
+      'lot-1',
+      'lot-2',
+    ]);
   });
 
   it('sets nextCursor from the last retained row (not the limit+1th)', async () => {
@@ -160,8 +168,7 @@ describe('GetMyBidsHandler', () => {
       makeRow({ id: 'bid-2', createdAt: new Date('2026-07-20T12:01:00Z') }),
       makeRow({ id: 'bid-3', createdAt: new Date('2026-07-20T12:00:00Z') }),
     ]);
-    lots.findById.mockResolvedValue(makeLot({ status: 'open' }));
-    bids.findCurrentBest.mockResolvedValue(null);
+    lots.findByIds.mockResolvedValue([makeLot({ status: 'open' })]);
 
     const result = await handler.execute({ carrierId: 'carrier-1', limit: 2 });
 
@@ -177,8 +184,7 @@ describe('GetMyBidsHandler', () => {
       makeRow({ id: 'bid-1' }),
       makeRow({ id: 'bid-2' }),
     ]);
-    lots.findById.mockResolvedValue(makeLot({ status: 'open' }));
-    bids.findCurrentBest.mockResolvedValue(null);
+    lots.findByIds.mockResolvedValue([makeLot({ status: 'open' })]);
 
     const result = await handler.execute({ carrierId: 'carrier-1', limit: 2 });
 
@@ -186,7 +192,6 @@ describe('GetMyBidsHandler', () => {
   });
 
   it('decodes the incoming cursor and forwards it to the repository', async () => {
-    bids.listByCarrier.mockResolvedValue([]);
     const cursor = encodeCursor('2026-07-20T12:00:00.000Z', 'bid-9');
 
     await handler.execute({ carrierId: 'carrier-1', cursor });

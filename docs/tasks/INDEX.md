@@ -28,7 +28,7 @@
 - [x] [M3-02](M3-02-cas-lua.md) — Lua CAS + reconciliation
 - [x] [M3-03](M3-03-bidding-hot-path.md) — bidding: горячий путь PlaceBid (idem→CAS→TX+outbox)
 - [x] [M3-04](M3-04-bidding-queries.md) — bidding: query-путь (история, мои ставки)
-- [ ] [M3-05](M3-05-realtime-gateway.md) — realtime: WS-gateway + Redis Pub/Sub fan-out
+- [x] [M3-05](M3-05-realtime-gateway.md) — realtime: WS-gateway + Redis Pub/Sub fan-out
 - [ ] [M3-06](M3-06-notification.md) — notification: идемпотентный мультиканальный консьюмер
 
 ## M4 — saga

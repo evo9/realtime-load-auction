@@ -125,10 +125,14 @@ describe('BaseConsumer retry/DLQ (integration)', () => {
 
   it('acks a successfully processed message and leaves the DLQ empty', async () => {
     let processed = 0;
+    // settlementSteps is bound only to the settlementCommands exchange, so it
+    // can't pick up stray events-exchange traffic (e.g. bid.placed, which the
+    // other tests in this file publish and which also fans out to several
+    // events-exchange queues) — keeps this test's count exact.
     const consumer = new SucceedingConsumer(
       connection,
       publisher,
-      Queues.listing,
+      Queues.settlementSteps,
       () => {
         processed += 1;
       },
@@ -136,8 +140,8 @@ describe('BaseConsumer retry/DLQ (integration)', () => {
     await consumer.onModuleInit();
 
     await publisher.publish(
-      Exchanges.events,
-      'lot.opened',
+      Exchanges.settlementCommands,
+      'settlement.step',
       { foo: 'baz' },
       { messageId: 'retry-2' },
     );
@@ -148,7 +152,7 @@ describe('BaseConsumer retry/DLQ (integration)', () => {
     const inspector = connection.createChannel({ json: false });
     await inspector.waitForConnect();
     await expect(
-      inspector.checkQueue(dlqName(Queues.listing)),
+      inspector.checkQueue(dlqName(Queues.settlementSteps)),
     ).resolves.toMatchObject({ messageCount: 0 });
 
     await inspector.close();

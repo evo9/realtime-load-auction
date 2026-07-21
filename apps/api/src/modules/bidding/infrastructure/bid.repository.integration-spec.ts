@@ -192,4 +192,56 @@ describe('BidRepository (integration)', () => {
     const best = await repository.findCurrentBest(lotId);
     expect(best?.amount).toBe(70000);
   });
+
+  it('findCurrentBestForLots returns the lowest bid per lot in one batched query', async () => {
+    const lotA = randomUUID();
+    const lotB = randomUUID();
+    const lotWithoutBids = randomUUID();
+    const rows = [
+      makeRow({ lotId: lotA, amount: 90000 }),
+      makeRow({ lotId: lotA, amount: 70000 }),
+      makeRow({ lotId: lotB, amount: 120000 }),
+    ];
+    for (const row of rows) {
+      await dataSource.getRepository(BidEntity).insert(row);
+    }
+
+    const best = await repository.findCurrentBestForLots([
+      lotA,
+      lotB,
+      lotWithoutBids,
+    ]);
+
+    expect(best.get(lotA)?.amount).toBe(70000);
+    expect(best.get(lotB)?.amount).toBe(120000);
+    // Lots with no bids simply don't appear in the map.
+    expect(best.has(lotWithoutBids)).toBe(false);
+  });
+
+  it('findCurrentBestForLots breaks amount ties by earliest createdAt (same rule as findCurrentBest)', async () => {
+    const lotId = randomUUID();
+    const base = Date.parse('2026-07-20T12:00:00.000Z');
+    const earlier = makeRow({
+      lotId,
+      amount: 80000,
+      createdAt: new Date(base),
+    });
+    const later = makeRow({
+      lotId,
+      amount: 80000,
+      createdAt: new Date(base + 1000),
+    });
+    // Insert the later one first so insertion order can't stand in for the tie-break.
+    for (const row of [later, earlier]) {
+      await dataSource.getRepository(BidEntity).insert(row);
+    }
+
+    const best = await repository.findCurrentBestForLots([lotId]);
+    expect(best.get(lotId)?.bidId).toBe(earlier.id);
+  });
+
+  it('findCurrentBestForLots returns an empty map when given no lot ids (no query issued)', async () => {
+    const best = await repository.findCurrentBestForLots([]);
+    expect(best.size).toBe(0);
+  });
 });

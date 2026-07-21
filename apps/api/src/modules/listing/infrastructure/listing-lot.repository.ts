@@ -22,11 +22,13 @@ export class ListingLotRepository extends BaseRepository<ListingLotEntity> {
     super(dataSource, ListingLotEntity);
   }
 
-  // Redelivery of lot.opened can arrive after lot.closed has already advanced
-  // this row (at-least-once, no consumer-level dedup). The upsert therefore
-  // never overwrites status/close_at on conflict: those only move forward via
+  // Consumer-level dedup only guards against redelivering the same message —
+  // it can't stop a genuinely later lot.closed from committing before an
+  // earlier, reordered lot.opened arrives (at-least-once gives ordering no
+  // guarantee across distinct messageIds). The upsert therefore never
+  // overwrites status/close_at on conflict: those only move forward via
   // markClosing. Only the descriptive fields, which don't change between open
-  // and close, are re-applied on a duplicate delivery.
+  // and close, are re-applied on a duplicate/reordered delivery.
   async upsertOpened(payload: LotOpenedPayload): Promise<void> {
     await this.read()
       .createQueryBuilder()
@@ -71,6 +73,30 @@ export class ListingLotRepository extends BaseRepository<ListingLotEntity> {
       .where('id = :id', { id: lotId })
       .execute();
     return result.affected ?? 0;
+  }
+
+  // Reverse auction: a bid only wins the read-model's current_best if it's
+  // strictly lower (or the row has none yet). A worse/duplicate bid.placed
+  // redelivery is expected to affect 0 rows — that's a no-op, not an error.
+  async updateCurrentBest(lotId: string, amount: number): Promise<number> {
+    const result = await this.read()
+      .createQueryBuilder()
+      .update(ListingLotEntity)
+      .set({ currentBest: amount, updatedAt: () => 'now()' })
+      .where('id = :id', { id: lotId })
+      .andWhere('(current_best IS NULL OR :amount < current_best)', {
+        amount,
+      })
+      .execute();
+    return result.affected ?? 0;
+  }
+
+  async exists(lotId: string): Promise<boolean> {
+    const count = await this.read()
+      .createQueryBuilder('l')
+      .where('l.id = :id', { id: lotId })
+      .getCount();
+    return count > 0;
   }
 
   async list(filter: ListLotsFilter): Promise<ListingLotEntity[]> {
