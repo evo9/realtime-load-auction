@@ -13,5 +13,6 @@ import { NotificationConsumer } from '@src/modules/notification/infrastructure/n
     BiddingModule,
   ],
   providers: [NotificationLogRepository, NotificationConsumer],
+  exports: [NotificationLogRepository],
 })
 export class NotificationModule {}

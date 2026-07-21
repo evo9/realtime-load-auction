@@ -31,3 +31,20 @@ export function renderOutbid(
 export function renderLotClosed(closeAt: string): RenderedNotification {
   return { message: 'Your lot has closed', detail: { closeAt } };
 }
+
+export function renderLotWon(amount: number): RenderedNotification {
+  return {
+    message: `You won the lot at ${amount}`,
+    detail: { amount },
+  };
+}
+
+export function renderLotSettled(
+  winningAmount: number,
+  carrierId: string,
+): RenderedNotification {
+  return {
+    message: `Your lot settled at ${winningAmount}`,
+    detail: { winningAmount, carrierId },
+  };
+}

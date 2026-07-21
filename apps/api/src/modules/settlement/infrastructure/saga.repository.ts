@@ -69,6 +69,14 @@ export class SagaRepository extends BaseRepository<SagaInstanceEntity> {
     return entity ? this.mapper.toDomain(entity) : null;
   }
 
+  async lockForUpdate(
+    tx: TransactionContext,
+    id: string,
+  ): Promise<SagaInstance | null> {
+    const entity = await tx.lockForUpdate(SagaInstanceEntity, id);
+    return entity ? this.mapper.toDomain(entity) : null;
+  }
+
   // save() only guards against a stale version when the entity was read
   // (and locked) in this same transaction — it does not condition the
   // UPDATE on `version` itself. Callers advancing a saga under concurrent

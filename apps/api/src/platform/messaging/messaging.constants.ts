@@ -15,6 +15,10 @@ export const RoutingKeys = {
   lotCancelled: 'lot.cancelled',
 } as const;
 
+export const CommandRoutingKeys = {
+  settlementStep: 'settlement.step',
+} as const;
+
 export const Queues = {
   notification: 'notification.q',
   settlement: 'settlement.q',
@@ -59,7 +63,10 @@ export const CONSUMER_QUEUES: ConsumerQueueDescriptor[] = [
   {
     name: Queues.settlementSteps,
     bindings: [
-      { exchange: Exchanges.settlementCommands, keys: ['settlement.step'] },
+      {
+        exchange: Exchanges.settlementCommands,
+        keys: [CommandRoutingKeys.settlementStep],
+      },
     ],
   },
   {

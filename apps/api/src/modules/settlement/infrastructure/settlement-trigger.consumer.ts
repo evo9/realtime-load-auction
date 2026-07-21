@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import type { AmqpConnectionManager } from 'amqp-connection-manager';
 import { AMQP_CONNECTION } from '@src/platform/messaging/amqp-connection.token';
@@ -14,6 +15,8 @@ import {
 } from '@src/platform/messaging/messaging.constants';
 import { UnitOfWork } from '@src/platform/persistence/unit-of-work';
 import { SagaRepository } from '@src/modules/settlement/infrastructure/saga.repository';
+import { StepCommandPublisher } from '@src/modules/settlement/infrastructure/step-command.publisher';
+import { FIRST_STEP } from '@src/modules/settlement/domain/saga';
 import type { LotClosedPayload } from '@src/modules/listing/domain/listing-lot';
 
 @Injectable()
@@ -29,6 +32,7 @@ export class SettlementTriggerConsumer extends BaseConsumer<LotClosedPayload> {
     @Inject(DEDUP_PORT) dedup: DedupPort,
     private readonly uow: UnitOfWork,
     private readonly sagas: SagaRepository,
+    private readonly stepPublisher: StepCommandPublisher,
   ) {
     super(connection, publisher, config, dedup);
   }
@@ -37,12 +41,18 @@ export class SettlementTriggerConsumer extends BaseConsumer<LotClosedPayload> {
     switch (msg.routingKey) {
       case RoutingKeys.lotClosed: {
         const payload = msg.payload;
-        await this.uow.transaction((tx) =>
+        const saga = await this.uow.transaction((tx) =>
           this.sagas.create(tx, {
             lotId: payload.lotId,
-            payload: { closeAt: payload.closeAt },
+            payload: { closeAt: payload.closeAt, lockToken: randomUUID() },
           }),
         );
+        await this.stepPublisher.publishStep({
+          sagaId: saga.id,
+          lotId: saga.lotId,
+          step: FIRST_STEP,
+          direction: 'forward',
+        });
         return;
       }
       default:
