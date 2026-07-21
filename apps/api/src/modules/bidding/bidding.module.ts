@@ -5,7 +5,10 @@ import { AuctionModule } from '@src/modules/auction/auction.module';
 import { BidEntity } from '@src/modules/bidding/infrastructure/bid.entity';
 import { BidRepository } from '@src/modules/bidding/infrastructure/bid.repository';
 import { PlaceBidHandler } from '@src/modules/bidding/application/place-bid.handler';
+import { GetLotBidsHandler } from '@src/modules/bidding/application/get-lot-bids.handler';
+import { GetMyBidsHandler } from '@src/modules/bidding/application/get-my-bids.handler';
 import { BidsController } from '@src/modules/bidding/api/bids.controller';
+import { MyBidsController } from '@src/modules/bidding/api/my-bids.controller';
 
 @Module({
   imports: [
@@ -13,7 +16,12 @@ import { BidsController } from '@src/modules/bidding/api/bids.controller';
     IdentityModule,
     AuctionModule,
   ],
-  controllers: [BidsController],
-  providers: [BidRepository, PlaceBidHandler],
+  controllers: [BidsController, MyBidsController],
+  providers: [
+    BidRepository,
+    PlaceBidHandler,
+    GetLotBidsHandler,
+    GetMyBidsHandler,
+  ],
 })
 export class BiddingModule {}
