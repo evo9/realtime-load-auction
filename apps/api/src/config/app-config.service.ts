@@ -96,4 +96,11 @@ export class AppConfigService {
       msgDedupTtlMs: this.config.get('MSG_DEDUP_TTL_MS', { infer: true }),
     };
   }
+
+  get bidding() {
+    return {
+      rateLimit: this.config.get('BID_RATE_LIMIT', { infer: true }),
+      rateWindowMs: this.config.get('BID_RATE_WINDOW_MS', { infer: true }),
+    };
+  }
 }

@@ -27,7 +27,7 @@ function makeLot(overrides: Partial<Lot> = {}): Lot {
 describe('OpenLotHandler', () => {
   let uow: { transaction: jest.Mock };
   let lots: { lockForUpdate: jest.Mock; update: jest.Mock };
-  let cas: { setStatus: jest.Mock };
+  let cas: { setStatus: jest.Mock; reconcile: jest.Mock };
   let outboxAdd: jest.Mock;
   let calls: string[];
   let handler: OpenLotHandler;
@@ -54,6 +54,10 @@ describe('OpenLotHandler', () => {
       }),
     };
     cas = {
+      reconcile: jest.fn(() => {
+        calls.push('cas.reconcile');
+        return Promise.resolve();
+      }),
       setStatus: jest.fn(() => {
         calls.push('cas.setStatus');
         return Promise.resolve();
@@ -76,12 +80,14 @@ describe('OpenLotHandler', () => {
       'lot.opened',
       expect.objectContaining({ lotId: 'lot-1' }),
     );
+    expect(cas.reconcile).toHaveBeenCalledWith('lot-1', null);
     expect(cas.setStatus).toHaveBeenCalledWith('lot-1', 'open');
     expect(calls).toEqual([
       'transaction.start',
       'update',
       'outbox.add',
       'transaction.end',
+      'cas.reconcile',
       'cas.setStatus',
     ]);
   });
@@ -92,6 +98,7 @@ describe('OpenLotHandler', () => {
     await handler.execute('missing-lot');
 
     expect(lots.update).not.toHaveBeenCalled();
+    expect(cas.reconcile).not.toHaveBeenCalled();
     expect(cas.setStatus).not.toHaveBeenCalled();
   });
 
@@ -101,6 +108,7 @@ describe('OpenLotHandler', () => {
     await handler.execute('lot-1');
 
     expect(lots.update).not.toHaveBeenCalled();
+    expect(cas.reconcile).not.toHaveBeenCalled();
     expect(cas.setStatus).not.toHaveBeenCalled();
   });
 });

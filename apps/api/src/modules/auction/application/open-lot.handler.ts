@@ -47,8 +47,11 @@ export class OpenLotHandler {
     });
 
     // Postgres is the source of truth; the Redis status is only set once the
-    // commit above is durable — a candidate, not a lead.
+    // commit above is durable — a candidate, not a lead. Clearing the
+    // high-bid hash before flipping status closes the window where a bid
+    // could CAS against a stale candidate left by a prior run.
     if (opened) {
+      await this.cas.reconcile(lotId, null);
       await this.cas.setStatus(lotId, 'open');
     }
   }

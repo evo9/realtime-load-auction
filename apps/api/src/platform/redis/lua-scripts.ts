@@ -9,8 +9,28 @@ end
 // KEYS[1]=lot:{id}:high  KEYS[2]=lot:{id}:status
 // ARGV[1]=amount  ARGV[2]=carrierId  ARGV[3]=bidId
 export const CAS_BEAT_HIGH_BID = `
+if redis.call('GET', KEYS[2]) ~= 'open' then return {0, 'closed'} end
+local amount = tonumber(ARGV[1])
+-- NaN is the only Lua number that isn't equal to itself; left unguarded it
+-- would poison every future comparison on this lot ('cur >= NaN' is always
+-- false, so every later bid would bypass the reverse-auction check).
+if amount ~= amount then return {0, 'too_low'} end
+local cur = tonumber(redis.call('HGET', KEYS[1], 'amount'))
+if cur and amount >= cur then return {0, 'too_low'} end
 redis.call('HSET', KEYS[1], 'amount', ARGV[1], 'carrierId', ARGV[2], 'bidId', ARGV[3])
 return {1, 'accepted'}
+`;
+
+// KEYS[1]=lot:{id}:high
+// ARGV[1]=expectedBidId  ARGV[2]=hasFact(0/1)  ARGV[3]=amount  ARGV[4]=carrierId  ARGV[5]=bidId
+export const RECONCILE_IF_CURRENT = `
+if redis.call('HGET', KEYS[1], 'bidId') ~= ARGV[1] then return 0 end
+if ARGV[2] == '1' then
+  redis.call('HSET', KEYS[1], 'amount', ARGV[3], 'carrierId', ARGV[4], 'bidId', ARGV[5])
+else
+  redis.call('DEL', KEYS[1])
+end
+return 1
 `;
 
 // KEYS[1]=idem:{key}  ARGV[1]=in-progress envelope JSON  ARGV[2]=inProgressTtlMs
