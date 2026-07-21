@@ -23,5 +23,6 @@ import { MyBidsController } from '@src/modules/bidding/api/my-bids.controller';
     GetLotBidsHandler,
     GetMyBidsHandler,
   ],
+  exports: [BidRepository],
 })
 export class BiddingModule {}

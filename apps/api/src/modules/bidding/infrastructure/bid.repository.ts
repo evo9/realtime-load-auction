@@ -73,6 +73,25 @@ export class BidRepository extends BaseRepository<BidEntity> {
     );
   }
 
+  // Sibling of findCurrentBest that excludes one bid — used to find who held
+  // the lead right before excludeBidId was placed, e.g. to notify whoever
+  // just got outbid.
+  async findPreviousBest(
+    lotId: string,
+    excludeBidId: string,
+  ): Promise<HighBidCandidate | null> {
+    const entity = await this.read()
+      .createQueryBuilder('b')
+      .where('b.lot_id = :lotId', { lotId })
+      .andWhere('b.id != :excludeBidId', { excludeBidId })
+      .orderBy('b.amount', 'ASC')
+      .addOrderBy('b.created_at', 'ASC')
+      .getOne();
+    return entity
+      ? { amount: entity.amount, carrierId: entity.carrierId, bidId: entity.id }
+      : null;
+  }
+
   // ORDER BY and the cursor comparator must stay in lockstep column-for-
   // column: Postgres row comparison `(a, b) > (x, y)` walks the tuple
   // lexicographically, so any column present in ORDER BY but absent from the

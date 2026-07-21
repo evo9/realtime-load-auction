@@ -244,4 +244,35 @@ describe('BidRepository (integration)', () => {
     const best = await repository.findCurrentBestForLots([]);
     expect(best.size).toBe(0);
   });
+
+  it('findPreviousBest returns the second-best bid, excluding the current best', async () => {
+    const lotId = randomUUID();
+    const best = makeRow({ lotId, amount: 70000 });
+    const second = makeRow({ lotId, amount: 90000 });
+    const third = makeRow({ lotId, amount: 120000 });
+    for (const row of [third, best, second]) {
+      await dataSource.getRepository(BidEntity).insert(row);
+    }
+
+    const previous = await repository.findPreviousBest(
+      lotId,
+      best.id as string,
+    );
+
+    expect(previous?.bidId).toBe(second.id);
+    expect(previous?.amount).toBe(90000);
+  });
+
+  it('findPreviousBest returns null when the lot has only the excluded bid', async () => {
+    const lotId = randomUUID();
+    const onlyBid = makeRow({ lotId, amount: 80000 });
+    await dataSource.getRepository(BidEntity).insert(onlyBid);
+
+    const previous = await repository.findPreviousBest(
+      lotId,
+      onlyBid.id as string,
+    );
+
+    expect(previous).toBeNull();
+  });
 });
