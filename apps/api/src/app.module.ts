@@ -8,6 +8,7 @@ import { AppConfigService } from '@src/config/app-config.service';
 import { HealthModule } from '@src/health/health.module';
 import { AuctionModule } from '@src/modules/auction/auction.module';
 import { AuctionSchedulerWiringModule } from '@src/modules/auction/auction-scheduler-wiring.module';
+import { BiddingModule } from '@src/modules/bidding/bidding.module';
 import { IdentityModule } from '@src/modules/identity/identity.module';
 import { ListingModule } from '@src/modules/listing/listing.module';
 import { IdempotencyModule } from '@src/platform/idempotency/idempotency.module';
@@ -30,6 +31,7 @@ import { SchedulerModule } from '@src/platform/scheduler/scheduler.module';
     IdentityModule,
     AuctionModule,
     AuctionSchedulerWiringModule,
+    BiddingModule,
     ListingModule,
     LoggerModule.forRootAsync({
       imports: [AppConfigModule],
