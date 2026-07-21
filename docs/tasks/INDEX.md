@@ -27,7 +27,7 @@
 - [x] [M3-01](M3-01-platform-idempotency.md) — platform/idempotency: API-интерсептор + дедуп консьюмеров
 - [x] [M3-02](M3-02-cas-lua.md) — Lua CAS + reconciliation
 - [x] [M3-03](M3-03-bidding-hot-path.md) — bidding: горячий путь PlaceBid (idem→CAS→TX+outbox)
-- [ ] [M3-04](M3-04-bidding-queries.md) — bidding: query-путь (история, мои ставки)
+- [x] [M3-04](M3-04-bidding-queries.md) — bidding: query-путь (история, мои ставки)
 - [ ] [M3-05](M3-05-realtime-gateway.md) — realtime: WS-gateway + Redis Pub/Sub fan-out
 - [ ] [M3-06](M3-06-notification.md) — notification: идемпотентный мультиканальный консьюмер
 
