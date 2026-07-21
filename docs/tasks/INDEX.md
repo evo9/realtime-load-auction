@@ -33,7 +33,7 @@
 
 ## M4 — saga
 - [x] [M4-01](M4-01-saga-state.md) — settlement: модель состояния саги + saga_instances
-- [ ] [M4-02](M4-02-saga-steps.md) — settlement: шаги саги + компенсации
+- [x] [M4-02](M4-02-saga-steps.md) — settlement: шаги саги + компенсации
 - [ ] [M4-03](M4-03-retry-dlx.md) — retry/DLX + backpressure на всех консьюмерах
 - [ ] [M4-04](M4-04-ops-visibility.md) — ops-видимость: состояния саг + DLQ
 

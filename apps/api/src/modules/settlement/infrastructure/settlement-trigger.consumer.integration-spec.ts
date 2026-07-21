@@ -20,6 +20,7 @@ import { NullOutboxPort } from '@src/platform/persistence/outbox.port';
 import { UnitOfWork } from '@src/platform/persistence/unit-of-work';
 import { SagaInstanceEntity } from '@src/modules/settlement/infrastructure/saga-instance.entity';
 import { SagaRepository } from '@src/modules/settlement/infrastructure/saga.repository';
+import { StepCommandPublisher } from '@src/modules/settlement/infrastructure/step-command.publisher';
 import { SettlementTriggerConsumer } from '@src/modules/settlement/infrastructure/settlement-trigger.consumer';
 import { SagaStatus, SagaStep } from '@src/modules/settlement/domain/saga';
 
@@ -80,6 +81,7 @@ describe('SettlementTriggerConsumer (integration)', () => {
 
     sagas = new SagaRepository(dataSource);
     uow = new UnitOfWork(dataSource, new NullOutboxPort());
+    const stepPublisher = new StepCommandPublisher(publisher);
 
     consumer = new SettlementTriggerConsumer(
       connection,
@@ -88,6 +90,7 @@ describe('SettlementTriggerConsumer (integration)', () => {
       new NullDedupPort(),
       uow,
       sagas,
+      stepPublisher,
     );
     await consumer.onModuleInit();
   }, 180_000);
@@ -118,7 +121,8 @@ describe('SettlementTriggerConsumer (integration)', () => {
     expect(saga?.step).toBe(SagaStep.Lock);
     expect(saga?.status).toBe(SagaStatus.Running);
     expect(saga?.attempts).toBe(0);
-    expect(saga?.payload).toEqual({ closeAt });
+    expect(saga?.payload.closeAt).toBe(closeAt);
+    expect(typeof saga?.payload.lockToken).toBe('string');
   }, 30_000);
 
   it('redelivery of the same messageId does not create a second saga row', async () => {

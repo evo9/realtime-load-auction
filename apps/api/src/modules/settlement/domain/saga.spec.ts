@@ -3,6 +3,7 @@ import {
   SagaStep,
   STEP_ORDER,
   nextStep,
+  previousStep,
 } from '@src/modules/settlement/domain/saga';
 
 describe('STEP_ORDER', () => {
@@ -30,5 +31,29 @@ describe('nextStep', () => {
 
   it.each(pairs)('from %s returns %s', (from, expected) => {
     expect(nextStep(from)).toBe(expected);
+  });
+});
+
+describe('previousStep', () => {
+  const pairs: [SagaStep, SagaStep | null][] = [
+    [SagaStep.Lock, null],
+    [SagaStep.Winner, SagaStep.Lock],
+    [SagaStep.Reserve, SagaStep.Winner],
+    [SagaStep.Invoice, SagaStep.Reserve],
+    [SagaStep.Notify, SagaStep.Invoice],
+    [SagaStep.Settle, SagaStep.Notify],
+  ];
+
+  it.each(pairs)('from %s returns %s', (from, expected) => {
+    expect(previousStep(from)).toBe(expected);
+  });
+
+  it('is the exact inverse of nextStep across the whole chain', () => {
+    for (const step of STEP_ORDER) {
+      const next = nextStep(step);
+      if (next !== null) {
+        expect(previousStep(next)).toBe(step);
+      }
+    }
   });
 });

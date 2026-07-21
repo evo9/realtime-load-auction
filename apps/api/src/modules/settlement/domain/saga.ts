@@ -32,8 +32,18 @@ export function nextStep(step: SagaStep): SagaStep | null {
     : STEP_ORDER[index + 1];
 }
 
+export function previousStep(step: SagaStep): SagaStep | null {
+  const index = STEP_ORDER.indexOf(step);
+  return index <= 0 ? null : STEP_ORDER[index - 1];
+}
+
 export interface SagaPayload {
   closeAt?: string;
+  lockToken?: string;
+  winningBidId?: string;
+  winningAmount?: number;
+  winningCarrierId?: string;
+  failureReason?: string;
   [key: string]: unknown;
 }
 

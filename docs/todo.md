@@ -1,32 +1,40 @@
-# M4-01 — settlement: модель состояния саги + saga_instances
+# M4-02 — settlement: шаги саги + компенсации
 
 План: /Users/evo/.claude/plans/fluttering-floating-rain.md
 
 ## Implement
-- [x] `modules/settlement/domain/saga.ts` (SagaStep, SagaStatus, STEP_ORDER, FIRST_STEP, nextStep, SagaPayload, SagaInstance) + `saga.spec.ts`
-- [x] `modules/settlement/infrastructure/saga-instance.entity.ts` (+ `@Unique(['lotId'])`, `@VersionColumn`)
-- [x] `modules/settlement/infrastructure/saga.mapper.ts`
-- [x] `modules/settlement/infrastructure/saga.repository.ts` (create/findByLotId/findById/update)
-- [x] `modules/settlement/infrastructure/settlement-trigger.consumer.ts` (BaseConsumer на Queues.settlement, lot.closed → sagas.create)
-- [x] `modules/settlement/settlement.module.ts`
-- [x] `platform/persistence/migrations/1784900000000-CreateSagaInstances.ts`
-- [x] `app.module.ts` — регистрация SettlementModule
+- [x] `saga.ts` — `previousStep(step)`
+- [x] `domain/settlement-command.ts` — SettlementStepCommand/StepDirection
+- [x] `SagaRepository.lockForUpdate(tx, id)`
+- [x] `LockService.acquireOwned(key, token, ttlMs)` + Lua
+- [x] `messaging.constants.ts` — `CommandRoutingKeys.settlementStep`
+- [x] `infrastructure/step-command.publisher.ts`
+- [x] `fund-reservation.entity.ts` + repository + `reservation.service.ts` + миграция
+- [x] `invoice.entity.ts` + repository + `invoice.service.ts` + миграция
+- [x] `notification/domain/notification.ts` + `notification-templates.ts` — lot_won/lot_settled
+- [x] `notification.module.ts` — export NotificationLogRepository
+- [x] `settlement-notifier.ts`
+- [x] `settlement-trigger.consumer.ts` — seed lockToken, publish первый кик
+- [x] `application/settlement-step.consumer.ts` — forward/compensate/beginCompensation/finalizeCancel
+- [x] `settlement.module.ts` — wiring
 
 ## Test
-- [x] `saga.spec.ts` — nextStep/порядок шагов
-- [x] `settlement-trigger.consumer.integration-spec.ts` — lot.closed создаёт running/lock; редеставка не дублирует
-- [x] `saga.repository.integration-spec.ts` — рестарт (DataSource A→B) не теряет прогресс; optimistic lock работает
+- [x] happy-path: settled + winner + резерв/инвойс + 2 нотификации + settlement.completed
+- [x] compensation: сбой на invoice → откат 3..1, cancelled, settlement.failed(step_failed:invoice)
+- [x] no-bids: cancelled без резерва/инвойса, settlement.failed(no_valid_bids)
+- [x] exactly-once: повторный settle-кик — no-op
+- [x] unit: previousStep, acquireOwned
 
 ## Verify
 - [x] `pnpm -C apps/api lint`
 - [x] `pnpm -C apps/api build`
 - [x] `pnpm -C apps/api test`
-- [x] `pnpm -C apps/api test:integration`
-- [x] миграция накатывается на реальную инфру (`make up` + `migration:run`)
+- [x] `pnpm -C apps/api test:integration` (3 прогона без флейка)
+- [x] миграции на `make up`-инфре (run/revert/run)
 
 ## Pipeline
-- [x] `reviewer` — PASS WITH WARNINGS (warning закрыт комментарием на `update()`)
-- [x] `security-review` — без Critical/High
+- [x] `reviewer` — PASS (suggestion применён: упрощён compensateLock)
+- [x] `security-review` — без Critical/High/Medium
 - [x] `spec-guardian` — ALIGNED
 - [x] `pattern-verifier` — PROVEN
 - [x] worklog.md запись + INDEX.md галочка

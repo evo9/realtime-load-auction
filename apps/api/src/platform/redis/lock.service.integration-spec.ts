@@ -62,4 +62,23 @@ describe('LockService (integration)', () => {
 
     await expect(locks.acquire(key, 5_000)).resolves.not.toBeNull();
   });
+
+  it('acquireOwned grants the lock when the key is free', async () => {
+    const key = 'lock:owned-free';
+    await expect(locks.acquireOwned(key, 'token-a', 5_000)).resolves.toBe(true);
+  });
+
+  it('acquireOwned is reentrant for the same token', async () => {
+    const key = 'lock:owned-reentrant';
+    await expect(locks.acquireOwned(key, 'token-a', 5_000)).resolves.toBe(true);
+    await expect(locks.acquireOwned(key, 'token-a', 5_000)).resolves.toBe(true);
+  });
+
+  it('acquireOwned refuses a different token while the key is held', async () => {
+    const key = 'lock:owned-conflict';
+    await expect(locks.acquireOwned(key, 'token-a', 5_000)).resolves.toBe(true);
+    await expect(locks.acquireOwned(key, 'token-b', 5_000)).resolves.toBe(
+      false,
+    );
+  });
 });
