@@ -36,10 +36,71 @@ export class AppConfigService {
     };
   }
 
+  get messaging() {
+    return {
+      prefetch: this.config.get('RABBITMQ_PREFETCH', { infer: true }),
+      retryLimit: this.config.get('RABBITMQ_RETRY_LIMIT', { infer: true }),
+      retryBaseTtlMs: this.config.get('RABBITMQ_RETRY_BASE_TTL_MS', {
+        infer: true,
+      }),
+      retryMultiplier: this.config.get('RABBITMQ_RETRY_MULTIPLIER', {
+        infer: true,
+      }),
+      retryMaxTtlMs: this.config.get('RABBITMQ_RETRY_MAX_TTL_MS', {
+        infer: true,
+      }),
+    };
+  }
+
   get redis() {
     return {
       host: this.config.get('REDIS_HOST', { infer: true }),
       port: this.config.get('REDIS_PORT', { infer: true }),
+    };
+  }
+
+  get jwt() {
+    return {
+      secret: this.config.get('JWT_SECRET', { infer: true }),
+      expiresIn: this.config.get('JWT_EXPIRES_IN', { infer: true }),
+    };
+  }
+
+  get outbox() {
+    return {
+      pollIntervalMs: this.config.get('OUTBOX_POLL_INTERVAL_MS', {
+        infer: true,
+      }),
+      batchSize: this.config.get('OUTBOX_BATCH_SIZE', { infer: true }),
+    };
+  }
+
+  get scheduler() {
+    return {
+      tickIntervalMs: this.config.get('SCHEDULER_TICK_INTERVAL_MS', {
+        infer: true,
+      }),
+      batchSize: this.config.get('SCHEDULER_BATCH_SIZE', { infer: true }),
+      retryDelayMs: this.config.get('SCHEDULER_RETRY_DELAY_MS', {
+        infer: true,
+      }),
+    };
+  }
+
+  get idempotency() {
+    return {
+      inProgressTtlMs: this.config.get('IDEMPOTENCY_INPROGRESS_TTL_MS', {
+        infer: true,
+      }),
+      doneTtlMs: this.config.get('IDEMPOTENCY_DONE_TTL_MS', { infer: true }),
+      msgDedupTtlMs: this.config.get('MSG_DEDUP_TTL_MS', { infer: true }),
+    };
+  }
+
+  get bidding() {
+    return {
+      rateLimit: this.config.get('BID_RATE_LIMIT', { infer: true }),
+      rateWindowMs: this.config.get('BID_RATE_WINDOW_MS', { infer: true }),
     };
   }
 }

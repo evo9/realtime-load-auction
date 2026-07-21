@@ -9,27 +9,27 @@
 ## M1 — каркас
 - [x] [M1-01](M1-01-infra-docker-compose.md) — docker-compose + Makefile (postgres/rabbitmq/redis)
 - [x] [M1-02](M1-02-nest-scaffold.md) — NestJS scaffold: config, логи, healthcheck
-- [ ] [M1-03](M1-03-platform-persistence.md) — platform/persistence: TypeORM, UoW, миграции
-- [ ] [M1-04](M1-04-platform-stubs.md) — платформенные модули-заглушки + проводка AppModule
-- [ ] [M1-05](M1-05-identity.md) — identity: пользователи, роли, JWT, login
+- [x] [M1-03](M1-03-platform-persistence.md) — platform/persistence: TypeORM, UoW, миграции
+- [x] [M1-04](M1-04-platform-stubs.md) — платформенные модули-заглушки + проводка AppModule
+- [x] [M1-05](M1-05-identity.md) — identity: пользователи, роли, JWT, login
 
 ## M2 — лоты
-- [ ] [M2-01](M2-01-platform-redis.md) — platform/redis: Lock, RateLimiter, PubSub, CAS-каркас
-- [ ] [M2-02](M2-02-platform-messaging.md) — platform/messaging: топология, publisher, base consumer, QoS, retry/DLX
-- [ ] [M2-03](M2-03-platform-outbox.md) — platform/outbox: таблица + relay
-- [ ] [M2-04](M2-04-platform-scheduler.md) — platform/scheduler: ZSET-планировщик
-- [ ] [M2-05](M2-05-auction-domain.md) — auction: домен лота + state-machine + миграция
-- [ ] [M2-06](M2-06-auction-commands.md) — auction: команды Create/Open/Close/Cancel + scheduler + outbox
-- [ ] [M2-07](M2-07-listing-readmodel.md) — listing: read-model (проекция) + query-API
-- [ ] [M2-08](M2-08-seed.md) — seed: шипперы, пользователи, лоты
+- [x] [M2-01](M2-01-platform-redis.md) — platform/redis: Lock, RateLimiter, PubSub, CAS-каркас
+- [x] [M2-02](M2-02-platform-messaging.md) — platform/messaging: топология, publisher, base consumer, QoS, retry/DLX
+- [x] [M2-03](M2-03-platform-outbox.md) — platform/outbox: таблица + relay
+- [x] [M2-04](M2-04-platform-scheduler.md) — platform/scheduler: ZSET-планировщик
+- [x] [M2-05](M2-05-auction-domain.md) — auction: домен лота + state-machine + миграция
+- [x] [M2-06](M2-06-auction-commands.md) — auction: команды Create/Open/Close/Cancel + scheduler + outbox
+- [x] [M2-07](M2-07-listing-readmodel.md) — listing: read-model (проекция) + query-API
+- [x] [M2-08](M2-08-seed.md) — seed: шипперы, пользователи, лоты
 
 ## M3 — горячий путь
-- [ ] [M3-01](M3-01-platform-idempotency.md) — platform/idempotency: API-интерсептор + дедуп консьюмеров
-- [ ] [M3-02](M3-02-cas-lua.md) — Lua CAS + reconciliation
-- [ ] [M3-03](M3-03-bidding-hot-path.md) — bidding: горячий путь PlaceBid (idem→CAS→TX+outbox)
-- [ ] [M3-04](M3-04-bidding-queries.md) — bidding: query-путь (история, мои ставки)
-- [ ] [M3-05](M3-05-realtime-gateway.md) — realtime: WS-gateway + Redis Pub/Sub fan-out
-- [ ] [M3-06](M3-06-notification.md) — notification: идемпотентный мультиканальный консьюмер
+- [x] [M3-01](M3-01-platform-idempotency.md) — platform/idempotency: API-интерсептор + дедуп консьюмеров
+- [x] [M3-02](M3-02-cas-lua.md) — Lua CAS + reconciliation
+- [x] [M3-03](M3-03-bidding-hot-path.md) — bidding: горячий путь PlaceBid (idem→CAS→TX+outbox)
+- [x] [M3-04](M3-04-bidding-queries.md) — bidding: query-путь (история, мои ставки)
+- [x] [M3-05](M3-05-realtime-gateway.md) — realtime: WS-gateway + Redis Pub/Sub fan-out
+- [x] [M3-06](M3-06-notification.md) — notification: идемпотентный мультиканальный консьюмер
 
 ## M4 — saga
 - [ ] [M4-01](M4-01-saga-state.md) — settlement: модель состояния саги + saga_instances

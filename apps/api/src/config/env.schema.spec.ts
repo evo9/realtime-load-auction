@@ -11,8 +11,19 @@ const validEnv = {
   RABBITMQ_MANAGEMENT_PORT: '15672',
   RABBITMQ_DEFAULT_USER: 'auction',
   RABBITMQ_DEFAULT_PASS: 'auction',
+  RABBITMQ_PREFETCH: '10',
+  RABBITMQ_RETRY_LIMIT: '3',
+  RABBITMQ_RETRY_BASE_TTL_MS: '5000',
+  RABBITMQ_RETRY_MULTIPLIER: '3',
+  RABBITMQ_RETRY_MAX_TTL_MS: '60000',
   REDIS_HOST: 'localhost',
   REDIS_PORT: '6379',
+  JWT_SECRET: 'test-secret-at-least-32-characters-long',
+  OUTBOX_POLL_INTERVAL_MS: '500',
+  OUTBOX_BATCH_SIZE: '100',
+  SCHEDULER_TICK_INTERVAL_MS: '500',
+  SCHEDULER_BATCH_SIZE: '100',
+  SCHEDULER_RETRY_DELAY_MS: '5000',
 };
 
 describe('envSchema', () => {
@@ -29,6 +40,12 @@ describe('envSchema', () => {
 
     expect(parsed.NODE_ENV).toBe('development');
     expect(parsed.PORT).toBe(3000);
+  });
+
+  it('defaults JWT_EXPIRES_IN to 1h', () => {
+    const parsed = envSchema.parse(validEnv);
+
+    expect(parsed.JWT_EXPIRES_IN).toBe('1h');
   });
 
   it('throws with a readable message when a required variable is missing', () => {

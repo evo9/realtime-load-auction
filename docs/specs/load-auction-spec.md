@@ -238,7 +238,7 @@ exchange  auction.dlx           type=topic
 | Ключ | Тип | Назначение |
 |---|---|---|
 | `idem:{key}` | string (SET NX) | идемпотентность API, TTL |
-| `msg:dedup:{messageId}` | string (SET NX) | идемпотентность консьюмеров |
+| `msg:dedup:{queue}:{messageId}` | string (SET NX) | идемпотентность консьюмеров, ключ на пару (очередь, messageId) — outbox публикует один `messageId` на строку, а topic-биндинги фан-аутят его в несколько очередей (см. `notification.q`/`settlement.q`/`listing.q` ← `lot.closed`), поэтому дедуп глобально по `messageId` ложно съедал бы событие для всех очередей, кроме первой |
 | `lot:{id}:high` | hash {amount,carrierId,bidId} | текущая лучшая ставка (CAS) |
 | `lot:{id}:status` | string | open/closing/closed (читает Lua CAS) |
 | `lot:{id}:lock` | string (SET NX + token) | distributed lock на закрытие/сеттлмент |

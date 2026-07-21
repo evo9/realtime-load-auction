@@ -4,6 +4,18 @@ import eslintPluginPrettierRecommended from 'eslint-plugin-prettier/recommended'
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+const noParentImports = {
+  regex: '\\.\\./',
+  message:
+    'Импорт наружу текущей папки — только через @src/*. Относительный путь допустим лишь до соседа по той же папке.',
+};
+
+const noDomainFromPlatform = {
+  regex: '^@src/modules/',
+  message:
+    'platform/* не знает о домене. Зависимость идёт modules → platform, не наоборот: разверни её через порт.',
+};
+
 export default tseslint.config(
   {
     ignores: ['eslint.config.mjs'],
@@ -32,17 +44,18 @@ export default tseslint.config(
       'no-restricted-imports': 'off',
       '@typescript-eslint/no-restricted-imports': [
         'error',
-        {
-          patterns: [
-            {
-              regex: '\\.\\./',
-              message:
-                'Импорт наружу текущей папки — только через @src/*. Относительный путь допустим лишь до соседа по той же папке.',
-            },
-          ],
-        },
+        { patterns: [noParentImports] },
       ],
       "prettier/prettier": ["error", { endOfLine: "auto" }],
+    },
+  },
+  {
+    files: ['src/platform/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-restricted-imports': [
+        'error',
+        { patterns: [noParentImports, noDomainFromPlatform] },
+      ],
     },
   },
 );

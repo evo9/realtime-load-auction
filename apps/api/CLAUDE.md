@@ -6,7 +6,7 @@
 - **NestJS 11.x** (CommonJS, Jest) — на v12 не переходим (ESM/Vitest нацелены на Q3 2026, для проекта рано).
 - TypeScript 5.7, `tsconfig` на `module: nodenext`, `strictNullChecks: true`.
 - Пакетный менеджер — **pnpm**.
-- `src/` содержит бутстрап-слой (`main.ts`, `app.module.ts`, `config/`, `health/`) и первый платформенный пакет — `platform/persistence`. Остальные `platform/*` и все `modules/` появляются по задачам M1-04+.
+- `src/` содержит бутстрап-слой (`main.ts`, `app.module.ts`, `config/`, `health/`), все `platform/*`-заглушки/пакеты и первый доменный модуль — `modules/identity`. Остальные `modules/` появляются с M2.
 
 ## Команды (из `apps/api/`)
 ```
@@ -41,11 +41,14 @@ src/
 - **Хендлеры — обычные `@Injectable`-сервисы.** Контроллер зовёт их напрямую (или через тонкий фасад). Никаких `CommandBus`/`QueryBus`/`EventBus` (см. корневой CLAUDE.md).
 - Query-путь не повторяет церемонию write-пути: query-хендлер бьёт прямо в read-model/репозиторий и отдаёт DTO.
 - Валидация входа — `class-validator`/`class-transformer` на DTO в `api/`.
-- Domain-модули **не импортируют** внутренности `platform/*` — только публичные провайдеры модулей.
+- **Зависимость идёт `modules/*` → `platform/*` и никогда обратно.** `platform/*` не знает слова «лот»: любой импорт из `@src/modules/*` внутри `platform/` — ошибка линта. Если платформе понадобилось что-то доменное, разверни стрелку портом (образец — `OutboxPort` в `platform/persistence`).
+- Domain-модули **не импортируют** внутренности `platform/*` — только публичные провайдеры модулей (линтом пока не зажато).
 - **Импорты — через алиас `@src/*`.** Относительный путь допустим только до соседа по той же папке (`./unit-of-work`, `./env.schema`). Всё, что лежит вне текущей директории, импортируется алиасом: `@src/config/app-config.service`, а не `../../config/app-config.service` и не `./config/app-config.service`. `../` в импортах не используем вообще — при переносе файла такой путь молча меняет смысл. Алиас объявлен в `tsconfig.json` (`paths`) и продублирован в jest (`moduleNameMapper` в `package.json` и `test/jest-e2e.json`) — при добавлении нового алиаса правь все три места. Рантайм-резолвинг не нужен: `nest build` переписывает алиасы в относительные пути на компиляции, в `dist` их не остаётся (`tsc-alias` не требуется).
-- **Репозитории — обычные `@Injectable`, write-методы принимают `tx: TransactionContext` первым аргументом** (не хранят `EntityManager` на весь жизненный цикл). `BaseRepository<Entity>` (`platform/persistence/base.repository.ts`) даёт `protected repo(tx)`; конкретные репозитории наследуют и добавляют доменные методы.
+- **Репозитории — обычные `@Injectable`, write-методы принимают `tx: TransactionContext` первым аргументом** (не хранят `EntityManager` на весь жизненный цикл). `BaseRepository<Entity>` (`platform/persistence/base.repository.ts`) даёт `protected repo(tx)` для записи и `protected read()` (напрямую через `DataSource`, без транзакции) для чтения — канонический способ читать вне query-хендлеров, повторяющих write-церемонию. Конкретные репозитории наследуют и добавляют доменные методы (см. `modules/identity/infrastructure/user.repository.ts`).
+- **Инжектируемое поле репозитория именуется коллекцией во множественном числе** — `private readonly lots: LotRepository`, `private readonly users: UserRepository` — а не `repository`/`repo`/`lotRepository`. DI здесь на классах, поэтому суффикс `Repository` уже несёт тип (токен инъекции — сам класс); дублировать его в имени поля незачем, а репозиторий на call-site читается как коллекция агрегатов: `this.lots.findById(id)`, `this.lots.insert(tx, lot)`. Единый стиль по всем хендлерам/консьюмерам — generic `repository` не использовать.
 - **Оптимистичная блокировка — `@VersionColumn()`** на write-сущностях (Lot и т.п., с M2-05). Пессимистичный лок на чтение перед изменением — `tx.lockForUpdate(Entity, id)` (`platform/persistence/transaction-context.ts`), generic уже сейчас; доменный `lockLotForUpdate` в M2-05 — тонкая обёртка над ним.
 - **`tx.outbox.add(manager, eventType, payload)` — контракт до M2-03.** Без реализации `platform/outbox` бросает понятную ошибку («not configured yet»); `UnitOfWork` инжектит `OUTBOX_PORT` опционально, `platform/persistence` не зависит от `platform/outbox`.
+- **Auth без passport** (`modules/identity`): `JwtAuthGuard`/`RolesGuard` — ручные `CanActivate` на `@nestjs/jwt`, без `@nestjs/passport`. Пароли — `@node-rs/argon2` (Argon2id; prebuilt-бинарники, без трения с `pnpm approve-builds`, в отличие от `bcrypt`/`argon2` на node-gyp). JWT-конфиг — секция `AppConfigService.jwt` (`JWT_SECRET` обязателен, без дефолта). `GET /me` возвращает JWT-payload как есть, без похода в БД — это guard-smoke-test, а не профильная ручка. `IdentityModule` экспортирует `JwtAuthGuard`/`RolesGuard`/`@Roles()` — будущие модули импортируют модуль, а не копируют guards.
 
 ## Библиотеки — осознанный выбор (не заменять)
 - `ioredis` (не node-redis): тяжёлый Lua/CAS через `defineCommand`, зрелый Pub/Sub.
