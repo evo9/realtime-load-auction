@@ -11,6 +11,7 @@ import { AuctionSchedulerWiringModule } from '@src/modules/auction/auction-sched
 import { BiddingModule } from '@src/modules/bidding/bidding.module';
 import { IdentityModule } from '@src/modules/identity/identity.module';
 import { ListingModule } from '@src/modules/listing/listing.module';
+import { NotificationModule } from '@src/modules/notification/notification.module';
 import { RealtimeModule } from '@src/modules/realtime/realtime.module';
 import { IdempotencyModule } from '@src/platform/idempotency/idempotency.module';
 import { MessagingModule } from '@src/platform/messaging/messaging.module';
@@ -35,6 +36,7 @@ import { SchedulerModule } from '@src/platform/scheduler/scheduler.module';
     BiddingModule,
     ListingModule,
     RealtimeModule,
+    NotificationModule,
     LoggerModule.forRootAsync({
       imports: [AppConfigModule],
       inject: [AppConfigService],

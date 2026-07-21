@@ -29,7 +29,7 @@
 - [x] [M3-03](M3-03-bidding-hot-path.md) — bidding: горячий путь PlaceBid (idem→CAS→TX+outbox)
 - [x] [M3-04](M3-04-bidding-queries.md) — bidding: query-путь (история, мои ставки)
 - [x] [M3-05](M3-05-realtime-gateway.md) — realtime: WS-gateway + Redis Pub/Sub fan-out
-- [ ] [M3-06](M3-06-notification.md) — notification: идемпотентный мультиканальный консьюмер
+- [x] [M3-06](M3-06-notification.md) — notification: идемпотентный мультиканальный консьюмер
 
 ## M4 — saga
 - [ ] [M4-01](M4-01-saga-state.md) — settlement: модель состояния саги + saga_instances
