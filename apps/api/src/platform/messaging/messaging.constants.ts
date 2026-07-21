@@ -20,6 +20,7 @@ export const Queues = {
   settlement: 'settlement.q',
   listing: 'listing.q',
   settlementSteps: 'settlement.steps.q',
+  realtime: 'realtime.q',
 } as const;
 
 interface QueueBinding {
@@ -49,13 +50,33 @@ export const CONSUMER_QUEUES: ConsumerQueueDescriptor[] = [
   {
     name: Queues.listing,
     bindings: [
-      { exchange: Exchanges.events, keys: ['lot.opened', 'lot.closed'] },
+      {
+        exchange: Exchanges.events,
+        keys: ['lot.opened', 'lot.closed', 'bid.placed'],
+      },
     ],
   },
   {
     name: Queues.settlementSteps,
     bindings: [
       { exchange: Exchanges.settlementCommands, keys: ['settlement.step'] },
+    ],
+  },
+  {
+    name: Queues.realtime,
+    bindings: [
+      {
+        exchange: Exchanges.events,
+        keys: [
+          'bid.placed',
+          'lot.opened',
+          'lot.closing',
+          'lot.closed',
+          'lot.cancelled',
+          'settlement.completed',
+          'settlement.failed',
+        ],
+      },
     ],
   },
 ];

@@ -48,12 +48,11 @@ export class GetMyBidsHandler {
     const page = hasMore ? rows.slice(0, limit) : rows;
 
     const uniqueLotIds = [...new Set(page.map((r) => r.lotId))];
-    const [lots, bests] = await Promise.all([
-      Promise.all(uniqueLotIds.map((id) => this.lots.findById(id))),
-      Promise.all(uniqueLotIds.map((id) => this.bids.findCurrentBest(id))),
+    const [lots, bestByLot] = await Promise.all([
+      this.lots.findByIds(uniqueLotIds),
+      this.bids.findCurrentBestForLots(uniqueLotIds),
     ]);
-    const lotById = new Map(uniqueLotIds.map((id, i) => [id, lots[i]]));
-    const bestByLot = new Map(uniqueLotIds.map((id, i) => [id, bests[i]]));
+    const lotById = new Map(lots.map((lot) => [lot.id, lot]));
 
     const items = page.map((entity) => {
       const lot = lotById.get(entity.lotId);

@@ -13,6 +13,10 @@ describe('RedisKeys', () => {
     expect(RedisKeys.lotLock('lot-1')).toBe('lot:lot-1:lock');
   });
 
+  it('lotChannel', () => {
+    expect(RedisKeys.lotChannel('lot-1')).toBe('lot:lot-1:channel');
+  });
+
   it('idem', () => {
     expect(RedisKeys.idem('abc-123')).toBe('idem:abc-123');
   });

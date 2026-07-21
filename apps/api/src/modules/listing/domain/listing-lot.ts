@@ -38,3 +38,11 @@ export interface LotClosedPayload {
   lotId: string;
   closeAt: string;
 }
+
+export interface BidPlacedPayload {
+  lotId: string;
+  bidId: string;
+  carrierId: string;
+  amount: number;
+  createdAt: string;
+}

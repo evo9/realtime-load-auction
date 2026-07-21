@@ -13,6 +13,7 @@ import {
   RoutingKeys,
 } from '@src/platform/messaging/messaging.constants';
 import type {
+  BidPlacedPayload,
   LotClosedPayload,
   LotOpenedPayload,
 } from '@src/modules/listing/domain/listing-lot';
@@ -20,7 +21,7 @@ import { ListingLotRepository } from '@src/modules/listing/infrastructure/listin
 
 @Injectable()
 export class ListingProjectionConsumer extends BaseConsumer<
-  LotOpenedPayload | LotClosedPayload
+  LotOpenedPayload | LotClosedPayload | BidPlacedPayload
 > {
   protected readonly queue = Queues.listing;
   protected readonly prefetch = 10;
@@ -37,14 +38,14 @@ export class ListingProjectionConsumer extends BaseConsumer<
   }
 
   protected async process(
-    msg: RmqMessage<LotOpenedPayload | LotClosedPayload>,
+    msg: RmqMessage<LotOpenedPayload | LotClosedPayload | BidPlacedPayload>,
   ): Promise<void> {
     switch (msg.routingKey) {
       case RoutingKeys.lotOpened:
         await this.repository.upsertOpened(msg.payload as LotOpenedPayload);
         return;
       case RoutingKeys.lotClosed: {
-        const payload = msg.payload;
+        const payload = msg.payload as LotClosedPayload;
         const affected = await this.repository.markClosing(
           payload.lotId,
           new Date(payload.closeAt),
@@ -53,6 +54,24 @@ export class ListingProjectionConsumer extends BaseConsumer<
           throw new Error(
             `ListingProjection: lot.closed for unknown lot ${payload.lotId} (opened event not yet projected) — will retry`,
           );
+        }
+        return;
+      }
+      case RoutingKeys.bidPlaced: {
+        const payload = msg.payload as BidPlacedPayload;
+        const affected = await this.repository.updateCurrentBest(
+          payload.lotId,
+          payload.amount,
+        );
+        if (affected === 0) {
+          const exists = await this.repository.exists(payload.lotId);
+          if (!exists) {
+            throw new Error(
+              `ListingProjection: bid.placed for unknown lot ${payload.lotId} (opened event not yet projected) — will retry`,
+            );
+          }
+          // lot exists but this bid isn't better than current_best — no-op
+          // (duplicate delivery, late arrival, or a since-superseded worse bid)
         }
         return;
       }

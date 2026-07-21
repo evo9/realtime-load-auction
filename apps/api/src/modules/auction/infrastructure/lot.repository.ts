@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
+import { DataSource, In } from 'typeorm';
 import { BaseRepository } from '@src/platform/persistence/base.repository';
 import { TransactionContext } from '@src/platform/persistence/transaction-context';
 import { Lot, LotStatus } from '@src/modules/auction/domain/lot';
@@ -22,6 +22,12 @@ export class LotRepository extends BaseRepository<LotEntity> {
   async findById(id: string): Promise<Lot | null> {
     const entity = await this.read().findOneBy({ id });
     return entity ? this.mapper.toDomain(entity) : null;
+  }
+
+  async findByIds(ids: string[]): Promise<Lot[]> {
+    if (ids.length === 0) return [];
+    const entities = await this.read().find({ where: { id: In(ids) } });
+    return entities.map((entity) => this.mapper.toDomain(entity));
   }
 
   async update(tx: TransactionContext, lot: Lot): Promise<Lot> {

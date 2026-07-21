@@ -180,4 +180,41 @@ describe('ListingLotRepository (integration)', () => {
     expect(secondPageIds).toEqual([payloads[2].lotId, payloads[3].lotId]);
     expect(secondPageIds.some((id) => firstPageIds.includes(id))).toBe(false);
   });
+
+  it('updateCurrentBest sets the first bid, ignores a worse one, and accepts a better one', async () => {
+    const payload = makeOpenedPayload();
+    await repository.upsertOpened(payload);
+
+    const first = await repository.updateCurrentBest(payload.lotId, 100000);
+    expect(first).toBe(1);
+
+    const worse = await repository.updateCurrentBest(payload.lotId, 120000);
+    expect(worse).toBe(0);
+
+    const rowAfterWorse = await dataSource
+      .getRepository(ListingLotEntity)
+      .findOneByOrFail({ id: payload.lotId });
+    expect(rowAfterWorse.currentBest).toBe(100000);
+
+    const better = await repository.updateCurrentBest(payload.lotId, 80000);
+    expect(better).toBe(1);
+
+    const rowAfterBetter = await dataSource
+      .getRepository(ListingLotEntity)
+      .findOneByOrFail({ id: payload.lotId });
+    expect(rowAfterBetter.currentBest).toBe(80000);
+  });
+
+  it('updateCurrentBest on an unknown lotId returns 0', async () => {
+    const affected = await repository.updateCurrentBest(randomUUID(), 50000);
+    expect(affected).toBe(0);
+  });
+
+  it('exists returns true for a projected lot and false for an unknown one', async () => {
+    const payload = makeOpenedPayload();
+    await repository.upsertOpened(payload);
+
+    await expect(repository.exists(payload.lotId)).resolves.toBe(true);
+    await expect(repository.exists(randomUUID())).resolves.toBe(false);
+  });
 });

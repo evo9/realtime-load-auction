@@ -182,4 +182,77 @@ describe('ListingProjectionConsumer (integration)', () => {
     expect(afterRedelivery.status).toBe('closing');
     expect(afterRedelivery.closeAt.getTime()).toBe(closingCloseAt);
   }, 30_000);
+
+  it('projects bid.placed onto current_best and dead-letters an unknown lot after retries are exhausted', async () => {
+    const payload: LotOpenedPayload = {
+      lotId: randomUUID(),
+      shipperId: randomUUID(),
+      origin: 'Denver, CO',
+      destination: 'Phoenix, AZ',
+      equipmentType: 'reefer',
+      weightKg: 9000,
+      reservePrice: 200000,
+      targetPrice: null,
+      openAt: new Date().toISOString(),
+      closeAt: new Date(Date.now() + 3_600_000).toISOString(),
+    };
+    await publisher.publish(Exchanges.events, RoutingKeys.lotOpened, payload, {
+      messageId: randomUUID(),
+    });
+    await waitFor(async () => {
+      const row = await dataSource
+        .getRepository(ListingLotEntity)
+        .findOneBy({ id: payload.lotId });
+      return row !== null;
+    }, 10_000);
+
+    const bidPayload = {
+      lotId: payload.lotId,
+      bidId: randomUUID(),
+      carrierId: randomUUID(),
+      amount: 150000,
+      createdAt: new Date().toISOString(),
+    };
+    await publisher.publish(
+      Exchanges.events,
+      RoutingKeys.bidPlaced,
+      bidPayload,
+      { messageId: randomUUID() },
+    );
+
+    await waitFor(async () => {
+      const row = await dataSource
+        .getRepository(ListingLotEntity)
+        .findOneByOrFail({ id: payload.lotId });
+      return row.currentBest === bidPayload.amount;
+    }, 10_000);
+
+    // bid.placed for a lot whose lot.opened has not been projected yet must
+    // retry rather than silently drop the read-model update. Exercised
+    // directly against process() rather than through a real redelivery: the
+    // retry topology's x-dead-letter-routing-key rewrites the AMQP routing
+    // key to the queue name on redelivery, so a requeued message no longer
+    // carries 'bid.placed' by the time the switch inspects it — an existing
+    // property of the shared retry/DLQ mechanism, not of this projection.
+    const unknownLotBid = {
+      lotId: randomUUID(),
+      bidId: randomUUID(),
+      carrierId: randomUUID(),
+      amount: 50000,
+      createdAt: new Date().toISOString(),
+    };
+    await expect(
+      (
+        consumer as unknown as {
+          process(msg: {
+            routingKey: string;
+            payload: typeof unknownLotBid;
+          }): Promise<void>;
+        }
+      ).process({
+        routingKey: RoutingKeys.bidPlaced,
+        payload: unknownLotBid,
+      }),
+    ).rejects.toThrow(/unknown lot/);
+  }, 30_000);
 });

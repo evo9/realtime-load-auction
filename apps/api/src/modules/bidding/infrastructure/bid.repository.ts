@@ -43,6 +43,36 @@ export class BidRepository extends BaseRepository<BidEntity> {
       : null;
   }
 
+  // Batched sibling of findCurrentBest: the current best (lowest amount, then
+  // earliest) bid for each of several lots in ONE query, so read handlers
+  // enriching a page of bids don't fan out into an N+1. DISTINCT ON (lot_id)
+  // keeps the first row per lot under the same (amount ASC, created_at ASC)
+  // order findCurrentBest uses; the leading ORDER BY column must be lot_id for
+  // Postgres to accept the DISTINCT ON.
+  async findCurrentBestForLots(
+    lotIds: string[],
+  ): Promise<Map<string, HighBidCandidate>> {
+    if (lotIds.length === 0) return new Map();
+    const rows = await this.read()
+      .createQueryBuilder('b')
+      .distinctOn(['b.lot_id'])
+      .where('b.lot_id IN (:...lotIds)', { lotIds })
+      .orderBy('b.lot_id', 'ASC')
+      .addOrderBy('b.amount', 'ASC')
+      .addOrderBy('b.created_at', 'ASC')
+      .getMany();
+    return new Map(
+      rows.map((entity) => [
+        entity.lotId,
+        {
+          amount: entity.amount,
+          carrierId: entity.carrierId,
+          bidId: entity.id,
+        },
+      ]),
+    );
+  }
+
   // ORDER BY and the cursor comparator must stay in lockstep column-for-
   // column: Postgres row comparison `(a, b) > (x, y)` walks the tuple
   // lexicographically, so any column present in ORDER BY but absent from the
