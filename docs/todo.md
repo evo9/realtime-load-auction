@@ -1,18 +1,21 @@
-# M5-04 — web: дашборд «Мои ставки»
+# M5-05 — web: ops-экран (саги + DLQ), опционально
 
-Решение по WS (уточнено с пользователем): без live-обновления через WS в этой задаче — чистый SSR с курсорной пагинацией, как `/lots` (M5-02). DoD "обновляется после новой ставки/закрытия" закрывается свежим SSR-фетчем при каждом заходе/навигации. WS-версия — явный TODO на будущее (мультиплексация `useLotChannel` на несколько лотов одной страницы — отдельная задача, не блокирует M5-04).
+Бэкенд (`GET /ops/sagas`, `GET /ops/dlq`) уже реализован в M4-04, `@Roles('admin')`. Requeue-кнопка — явно опциональна в тексте задачи И у бэка нет соответствующего эндпоинта (см. worklog M4-04: "Requeue/retry-эндпоинт... помечен как опциональный и не входит в DoD") — не реализуем, чтобы не изобретать несуществующий контракт.
+
+Доступ: единственная линия защиты — бэк (`@Roles('admin')`, уже enforced). Фронт: (1) страница ловит 403 от `getOpsSagas`/`getOpsDlq` и показывает "нет доступа" вместо краша; (2) ссылка "Ops" в nav скрыта для не-admin (чисто UX, не граница безопасности).
 
 ## Implement
-- [ ] `types/contracts.ts` — `MyBidStatus`, `MyBidDto`, `MyBidsResponse`
-- [ ] `lib/api/endpoints.ts` — `getMyBids(query, token)`
-- [ ] `components/lot-pagination.tsx` — обобщить `LotPagination` на `basePath`, переиспользовать для `/me/bids` (не дублировать курсорную пагинацию)
-- [ ] `components/my-bids/status-badge.tsx` — бейдж статуса (leading/outbid/won/lost)
-- [ ] `app/(protected)/me/bids/page.tsx` — SSR-страница, список + пагинация + ссылки на `/lots/:id`
-- [ ] `components/nav.tsx` — ссылка "Мои ставки"
+- [ ] `types/contracts.ts` — `SagaStep`, `SagaStatus`, `SagaOpsDto`, `ListSagasQuery`, `DlqMessageDto`, `DlqQueueSummaryDto`
+- [ ] `lib/api/endpoints.ts` — `getOpsSagas(query, token)`, `getOpsDlq(limit, token)`
+- [ ] `components/ops/saga-filters.tsx` — фильтры статус/шаг через searchParams (по образцу `lot-filters.tsx`)
+- [ ] `components/ops/saga-table.tsx` — таблица саг (шаг/статус/лот/попытки/обновлено, ссылка на `/lots/:id`)
+- [ ] `components/ops/dlq-panel.tsx` — панель DLQ (очередь/dlq-имя/счётчик/раскрывающийся список сообщений)
+- [ ] `app/(protected)/ops/page.tsx` — SSR-страница, параллельный фетч саг+DLQ, catch 403 → "нет доступа"
+- [ ] `components/nav.tsx` — ссылка "Ops", видна только `user?.role === 'admin'`
 
 ## Verify
 - [ ] `pnpm -C apps/web lint && build`
-- [ ] Ручной прогон в браузере: список ставок carrier, статусы, пагинация, переход на лот, обновление после новой ставки (повторный заход)
+- [ ] Ручной прогон: логин admin (ops@example.com) → `/ops` показывает саги+DLQ; логин carrier → нет ссылки в nav, прямой заход на `/ops` → "нет доступа" (403 от бэка)
 
 ## Pipeline
 - [ ] `reviewer`

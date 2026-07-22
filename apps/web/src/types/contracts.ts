@@ -146,3 +146,57 @@ export interface GetMyBidsQuery {
   cursor?: string;
   limit?: number;
 }
+
+export type SagaStep =
+  | 'lock'
+  | 'winner'
+  | 'reserve'
+  | 'invoice'
+  | 'notify'
+  | 'settle';
+
+export type SagaStatus = 'running' | 'compensating' | 'completed' | 'failed';
+
+export interface SagaOpsPayloadDto {
+  closeAt?: string;
+  winningBidId?: string;
+  winningAmount?: number;
+  winningCarrierId?: string;
+  failureReason?: string;
+}
+
+export interface SagaOpsDto {
+  id: string;
+  lotId: string;
+  step: SagaStep;
+  status: SagaStatus;
+  payload: SagaOpsPayloadDto;
+  attempts: number;
+  version: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ListSagasQuery {
+  status?: SagaStatus;
+  step?: SagaStep;
+  lotId?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface DlqMessageDto {
+  messageId: string;
+  attempt: number;
+  routingKey: string;
+  lastError?: string;
+  payload: unknown;
+  rawBody?: string;
+}
+
+export interface DlqQueueSummaryDto {
+  queue: string;
+  dlq: string;
+  messageCount: number;
+  messages: DlqMessageDto[];
+}

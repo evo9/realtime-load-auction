@@ -15,6 +15,11 @@ export function Nav() {
         <Link href="/me/bids" className="text-sm font-medium">
           Мои ставки
         </Link>
+        {user?.role === 'admin' && (
+          <Link href="/ops" className="text-sm font-medium">
+            Ops
+          </Link>
+        )}
       </div>
       <div className="flex items-center gap-4 text-sm text-zinc-500">
         {user && <span>{user.email}</span>}
