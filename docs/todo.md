@@ -1,18 +1,20 @@
-# M6-03 — Диаграммы: C4 + горячий путь + saga
+# M6-04 — ADR: ключевые архитектурные решения
 
-Три Mermaid-диаграммы в `docs/diagrams/`, встроенные в README (заменяют текстовый placeholder про диаграммы, оставленный в M6-02). ADR (M6-04) — не в объёме этой задачи, placeholder про него остаётся.
+Шесть ADR в `docs/adr/` (MADR-подобный формат «Контекст → Решение → Последствия»), индекс `docs/adr/README.md`, ссылки из корневого README вместо текстового placeholder.
 
 ## Implement
-- [x] `docs/diagrams/c4-context-container.md` — C4 контекст+контейнеры (actors → web → api → postgres/rabbitmq/redis)
-- [x] `docs/diagrams/hot-path-bid.md` — sequenceDiagram горячего пути ставки (§6, 5 шагов + reconciliation)
-- [x] `docs/diagrams/settlement-saga.md` — flowchart саги сеттлмента (§7, 6 шагов + компенсации в обратном порядке)
-- [x] README — заменил placeholder на встроенные mermaid-блоки + ссылки на файлы-первоисточники, ADR вынесен в отдельный подраздел
+- [x] `docs/adr/0001-ioredis-over-node-redis.md`
+- [x] `docs/adr/0002-amqplib-over-nestjs-microservices.md`
+- [x] `docs/adr/0003-cqrs-lite-without-nestjs-cqrs.md`
+- [x] `docs/adr/0004-outbox-and-durable-saga-over-inmemory-eventbus.md`
+- [x] `docs/adr/0005-redis-cas-candidate-with-reconciliation.md`
+- [x] `docs/adr/0006-nest-11-not-12.md`
+- [x] `docs/adr/README.md` — индекс (номер | заголовок | статус)
+- [x] README — заменил placeholder «Архитектурные решения (ADR)» на ссылки
 
 ## Verify
-- [x] Все три `.mmd` реально отрендерены `@mermaid-js/mermaid-cli` (headless Chromium, тот же движок, что использует GitHub) в SVG/PNG и визуально проверены — не просто «похоже на валидный синтаксис»
-- [x] Шаги на диаграммах построчно сверены с `place-bid.handler.ts` / `settlement-step.consumer.ts` / `saga.ts` (включая точный набор компенсаций no-op для winner/notify/settle)
-- [x] Placeholder про ADR (M6-04) не тронут — вынесен в свой подраздел «Архитектурные решения (ADR)»
-- [x] Найдена и исправлена неоднозначность лейблов компенсаций в saga-диаграмме (три одинаковых «Compensate: — (no-op)» → пронумерованы) — заметно только на реальном рендере, не на исходном тексте
+- [x] Каждое утверждение подкреплено конкретным файлом текущего кода (defineCommand/eval в platform/redis, topology.ts/base.consumer.ts, прямые вызовы хендлеров, outbox+saga_instances, reconcileIfCurrent, package.json/CLAUDE.md) — не только цитатой из ТЗ
+- [x] Все ссылки (README, индекс ADR, кросс-ссылки между самими ADR) программно сверены с файловой системой — все валидны
 
 ## Pipeline
 - [ ] Запись в docs/worklog.md + галочка в docs/tasks/INDEX.md
