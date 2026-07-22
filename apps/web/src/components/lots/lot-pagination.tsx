@@ -1,9 +1,11 @@
 import Link from 'next/link';
 
 export function LotPagination({
+  basePath = '/lots',
   searchParams,
   nextCursor,
 }: {
+  basePath?: string;
   searchParams: Record<string, string | undefined>;
   nextCursor?: string;
 }) {
@@ -18,7 +20,7 @@ export function LotPagination({
   return (
     <div className="flex justify-end">
       <Link
-        href={`/lots?${params.toString()}`}
+        href={`${basePath}?${params.toString()}`}
         className="rounded-md border border-zinc-300 px-4 py-2 text-sm font-medium dark:border-zinc-700"
       >
         Следующая страница
