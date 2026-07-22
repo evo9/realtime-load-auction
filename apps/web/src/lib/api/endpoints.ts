@@ -1,15 +1,19 @@
 import { apiRequest } from '@/lib/api/client';
+import { toQueryString } from '@/lib/api/query-string';
 import type {
   BidHistoryResponse,
   BidView,
+  DlqQueueSummaryDto,
   GetLotBidsQuery,
   GetMyBidsQuery,
   JwtPayload,
   ListLotsQuery,
   ListLotsResponse,
+  ListSagasQuery,
   LoginResponse,
   LotResponseDto,
   MyBidsResponse,
+  SagaOpsDto,
 } from '@/types/contracts';
 
 export function login(email: string, password: string): Promise<LoginResponse> {
@@ -27,14 +31,7 @@ export function listLots(
   query: ListLotsQuery = {},
   token?: string,
 ): Promise<ListLotsResponse> {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    if (value !== undefined && value !== '') {
-      params.set(key, String(value));
-    }
-  }
-  const qs = params.toString();
-  return apiRequest<ListLotsResponse>(`/lots${qs ? `?${qs}` : ''}`, { token });
+  return apiRequest<ListLotsResponse>(`/lots${toQueryString(query)}`, { token });
 }
 
 export function getLot(lotId: string, token?: string): Promise<LotResponseDto> {
@@ -46,15 +43,8 @@ export function getLotBids(
   query: GetLotBidsQuery = {},
   token?: string,
 ): Promise<BidHistoryResponse> {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    if (value !== undefined && value !== '') {
-      params.set(key, String(value));
-    }
-  }
-  const qs = params.toString();
   return apiRequest<BidHistoryResponse>(
-    `/lots/${lotId}/bids${qs ? `?${qs}` : ''}`,
+    `/lots/${lotId}/bids${toQueryString(query)}`,
     { token },
   );
 }
@@ -63,14 +53,7 @@ export function getMyBids(
   query: GetMyBidsQuery = {},
   token?: string,
 ): Promise<MyBidsResponse> {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(query)) {
-    if (value !== undefined && value !== '') {
-      params.set(key, String(value));
-    }
-  }
-  const qs = params.toString();
-  return apiRequest<MyBidsResponse>(`/me/bids${qs ? `?${qs}` : ''}`, { token });
+  return apiRequest<MyBidsResponse>(`/me/bids${toQueryString(query)}`, { token });
 }
 
 export function placeBid(
@@ -83,6 +66,22 @@ export function placeBid(
     method: 'POST',
     body: { amount },
     headers: { 'Idempotency-Key': idempotencyKey },
+    token,
+  });
+}
+
+export function getOpsSagas(
+  query: ListSagasQuery = {},
+  token?: string,
+): Promise<SagaOpsDto[]> {
+  return apiRequest<SagaOpsDto[]>(`/ops/sagas${toQueryString(query)}`, { token });
+}
+
+export function getOpsDlq(
+  limit?: number,
+  token?: string,
+): Promise<DlqQueueSummaryDto[]> {
+  return apiRequest<DlqQueueSummaryDto[]>(`/ops/dlq${toQueryString({ limit })}`, {
     token,
   });
 }
