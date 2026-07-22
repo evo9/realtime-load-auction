@@ -1,24 +1,18 @@
-'use client';
-
-import { useEffect, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/auth/auth-context';
+import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
+import type { ReactNode } from 'react';
+import { AuthGuard } from '@/components/auth-guard';
 import { Nav } from '@/components/nav';
 
-export default function ProtectedLayout({ children }: { children: ReactNode }) {
-  const router = useRouter();
-  const { token, isLoading } = useAuth();
-
-  useEffect(() => {
-    if (isLoading) return;
-    if (!token) router.replace('/auth/login');
-  }, [isLoading, token, router]);
-
-  if (isLoading || !token) return null;
+export default async function ProtectedLayout({ children }: { children: ReactNode }) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('auth.token')?.value;
+  if (!token) redirect('/auth/login');
 
   return (
     <div className="flex flex-1 flex-col">
       <Nav />
+      <AuthGuard />
       <main className="flex flex-1 flex-col">{children}</main>
     </div>
   );

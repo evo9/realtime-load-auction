@@ -28,6 +28,7 @@ interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
   body?: unknown;
   headers?: Record<string, string>;
+  token?: string;
 }
 
 export async function apiRequest<T>(
@@ -38,8 +39,9 @@ export async function apiRequest<T>(
     'Content-Type': 'application/json',
     ...options.headers,
   };
-  if (authToken) {
-    headers.Authorization = `Bearer ${authToken}`;
+  const token = options.token ?? authToken;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
   }
 
   const response = await fetch(`${config.apiUrl}${path}`, {

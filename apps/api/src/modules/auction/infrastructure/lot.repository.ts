@@ -57,4 +57,15 @@ export class LotRepository extends BaseRepository<LotEntity> {
     });
     return entity?.status ?? null;
   }
+
+  // Point UPDATE, not save(): the hot bid path only needs to persist the
+  // timestamp of the last accepted bid so CloseLotHandler can read it back
+  // for the anti-snipe check — not a full versioned save of the row.
+  async touchLastBidAt(
+    tx: TransactionContext,
+    lotId: string,
+    at: Date,
+  ): Promise<void> {
+    await tx.manager.update(LotEntity, { id: lotId }, { lastBidAt: at });
+  }
 }
