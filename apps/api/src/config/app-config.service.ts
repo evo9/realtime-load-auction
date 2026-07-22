@@ -113,4 +113,29 @@ export class AppConfigService {
         .filter(Boolean),
     };
   }
+
+  get demo() {
+    return {
+      enabled: this.config.get('DEMO_ENABLED', { infer: true }),
+      lotIntervalMs: this.config.get('DEMO_LOT_INTERVAL_MS', {
+        infer: true,
+      }),
+      bidIntervalMs: this.config.get('DEMO_BID_INTERVAL_MS', {
+        infer: true,
+      }),
+      maxOpenLots: this.config.get('DEMO_MAX_OPEN_LOTS', { infer: true }),
+      lotDurationMs: this.config.get('DEMO_LOT_DURATION_MS', {
+        infer: true,
+      }),
+      antiSnipeWindowSec: this.config.get('DEMO_ANTISNIPE_WINDOW_SEC', {
+        infer: true,
+      }),
+      bidProbability: this.config.get('DEMO_BID_PROBABILITY', {
+        infer: true,
+      }),
+      burstProbability: this.config.get('DEMO_BURST_PROBABILITY', {
+        infer: true,
+      }),
+    };
+  }
 }

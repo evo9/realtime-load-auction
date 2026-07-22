@@ -11,5 +11,6 @@ import { ListingController } from '@src/modules/listing/api/listing.controller';
   imports: [TypeOrmModule.forFeature([ListingLotEntity]), IdentityModule],
   controllers: [ListingController],
   providers: [ListingLotRepository, ListLotsHandler, ListingProjectionConsumer],
+  exports: [ListingLotRepository],
 })
 export class ListingModule {}
