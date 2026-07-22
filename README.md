@@ -83,9 +83,108 @@ MVP облегчённый: у **carrier** (перевозчика) полный
 - Геопоиск/матчинг по маршрутам — листинг — простой фильтр.
 - Мультивалютность, налоги, реальная тарификация.
 
-## Диаграммы и архитектурные решения
+## Диаграммы
 
-Ещё не готовы: C4 + горячий путь + saga лягут в `docs/diagrams/`, ключевые решения — в `docs/adr/` (следующие задачи майлстоуна M6). До тех пор — карта паттернов и `place-bid.handler.ts` выше плюс §4–§8 [спецификации](docs/specs/load-auction-spec.md) как текстовый эквивалент.
+### C4 — контекст и контейнеры
+
+`api` — единый процесс NestJS (HTTP + WebSocket + фоновые воркеры), не микросервисы. Исходник — [`docs/diagrams/c4-context-container.md`](docs/diagrams/c4-context-container.md).
+
+```mermaid
+flowchart TD
+    Carrier(["Carrier<br/>(перевозчик, браузер)"])
+    Shipper(["Shipper<br/>(грузоотправитель)<br/>только API — нет UI в MVP"])
+
+    subgraph system["Real-time Load Auction"]
+        direction TB
+        Web["web<br/>(Next.js)<br/>SSR-листинг + live-лот на WS"]
+        Api["api<br/>(NestJS монолит)<br/>HTTP + WebSocket + воркеры"]
+        Postgres[("Postgres<br/>источник истины: лоты, ставки, saga")]
+        RabbitMQ[("RabbitMQ<br/>outbox-события, команды саги, retry/DLX")]
+        Redis[("Redis<br/>CAS high-bid, idempotency, lock,<br/>ZSET-шедулер, rate-limit, Pub/Sub")]
+    end
+
+    Carrier -- "HTTPS + WS" --> Web
+    Web -- "REST (JWT) + WS /realtime" --> Api
+    Shipper -- "REST (JWT)<br/>в MVP — только seed / демо-генератор" --> Api
+
+    Api -- "TypeORM, транзакции" --> Postgres
+    Api -- "publish/consume, топология в §8.1" --> RabbitMQ
+    Api -- "Lua CAS, locks, Pub/Sub" --> Redis
+```
+
+### Горячий путь ставки
+
+5 шагов §6 + «тонкое место» (reconciliation после падения TX). Исходник — [`docs/diagrams/hot-path-bid.md`](docs/diagrams/hot-path-bid.md).
+
+```mermaid
+sequenceDiagram
+    actor Carrier
+    participant API as PlaceBidHandler
+    participant Idem as Redis (idempotency)
+    participant CAS as Redis (Lua CAS)
+    participant PG as Postgres
+    participant Relay as Outbox relay
+    participant MQ as RabbitMQ
+    participant WS as Realtime gateway (WS)
+
+    Carrier->>API: POST /lots/:id/bids (Idempotency-Key)
+    API->>Idem: 1. SET NX idem:{key}
+    Idem-->>API: новый ключ (не дубль)
+    API->>CAS: 2. Lua CAS — лучше текущей И лот open?
+    CAS-->>API: accepted, lot:{id}:high = кандидат
+    API->>PG: 3. TX: insert bid + bump lot.version + outbox row
+    PG-->>API: commit ok
+    API-->>Carrier: 201 Accepted
+
+    Relay->>PG: poll outbox
+    Relay->>MQ: 4. publish bid.placed
+    MQ->>WS: consume (listing.q / notification.q / realtime)
+    WS-->>Carrier: 5. WS bid.placed → все клиенты лота
+
+    rect rgba(220,50,50,0.12)
+        Note over API,PG: тонкое место — TX шага 3 падает ПОСЛЕ успешного CAS
+        API->>PG: TX: insert bid ... — ошибка/rollback
+        API->>PG: findCurrentBest(lotId)
+        API->>CAS: reconcileIfCurrent(fence: ожидаемый bidId)
+        Note right of CAS: Redis — кандидат, Postgres — источник истины.<br/>Если конкурентная ставка уже перезаписала кандидата,<br/>реконсиляция не трогает её (fenced по bidId).
+    end
+```
+
+### Saga закрытия лота и сеттлмента
+
+6 шагов §7 + компенсации в обратном порядке (начиная с упавшего шага). Исходник — [`docs/diagrams/settlement-saga.md`](docs/diagrams/settlement-saga.md).
+
+```mermaid
+flowchart TD
+    Trigger(["lot.closed"]) --> S1["1. Lock<br/>distributed lock на лот"]
+    S1 -->|ok| S2["2. Winner<br/>лучшая валидная ставка из БД"]
+    S2 -->|ok| S3["3. Reserve<br/>резерв средств (эмуляция)"]
+    S3 -->|ok| S4["4. Invoice<br/>сгенерировать инвойс"]
+    S4 -->|ok| S5["5. Notify<br/>winner + shipper"]
+    S5 -->|ok| S6["6. Settle<br/>lot.status = settled"]
+    S6 --> Done(["settlement.completed"])
+
+    S1 -.->|N ретраев исчерпаны| C1["Compensate 1: release lock"]
+    S2 -.->|нет валидных ставок<br/>или N ретраев| C2["Compensate 2: — (no-op)"]
+    S3 -.->|N ретраев исчерпаны| C3["Compensate 3: release funds"]
+    S4 -.->|N ретраев исчерпаны| C4["Compensate 4: void invoice"]
+    S5 -.->|N ретраев исчерпаны| C5["Compensate 5: — (no-op)"]
+    S6 -.->|N ретраев исчерпаны| C6["Compensate 6: — (no-op)"]
+
+    C6 --> C5 --> C4 --> C3 --> C2 --> C1
+    C1 --> Failed(["settlement.failed<br/>lot.status = cancelled"])
+
+    classDef compensate fill:#5a1f1f,stroke:#e06666,color:#fff
+    class C1,C2,C3,C4,C5,C6 compensate
+    classDef terminal fill:#1f3d1f,stroke:#66bb6a,color:#fff
+    class Done terminal
+    classDef failterm fill:#3d1f1f,stroke:#e06666,color:#fff
+    class Failed failterm
+```
+
+## Архитектурные решения (ADR)
+
+Ещё не готовы: ключевые решения лягут в `docs/adr/` (M6-04). До тех пор — §4–§8 [спецификации](docs/specs/load-auction-spec.md) и карта паттернов выше как текстовый эквивалент.
 
 ## Структура репозитория
 

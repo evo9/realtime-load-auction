@@ -47,7 +47,7 @@
 ## M6 — оживление + полировка
 - [x] [M6-01](M6-01-demo-generator.md) — генератор демо-активности (боты)
 - [x] [M6-02](M6-02-readme.md) — README: история + карта паттернов
-- [ ] [M6-03](M6-03-diagrams.md) — диаграммы: C4 + горячий путь + saga
+- [x] [M6-03](M6-03-diagrams.md) — диаграммы: C4 + горячий путь + saga
 - [ ] [M6-04](M6-04-adr.md) — ADR: ключевые решения
 - [ ] [M6-05](M6-05-ci.md) — CI: lint + test + build + testcontainers
 
