@@ -1,25 +1,24 @@
-# M5-05 — web: ops-экран (саги + DLQ), опционально
+# M6-02 — README: история проекта + карта паттернов
 
-Бэкенд (`GET /ops/sagas`, `GET /ops/dlq`) уже реализован в M4-04, `@Roles('admin')`. Requeue-кнопка — явно опциональна в тексте задачи И у бэка нет соответствующего эндпоинта (см. worklog M4-04: "Requeue/retry-эндпоинт... помечен как опциональный и не входит в DoD") — не реализуем, чтобы не изобретать несуществующий контракт.
-
-Доступ: единственная линия защиты — бэк (`@Roles('admin')`, уже enforced). Фронт: (1) страница ловит 403 от `getOpsSagas`/`getOpsDlq` и показывает "нет доступа" вместо краша; (2) ссылка "Ops" в nav скрыта для не-admin (чисто UX, не граница безопасности).
+Полная замена заготовки корневого `README.md` под аудиторию §1 ТЗ (5–10 минут: README → диаграмма → пара файлов). M6-03 (диаграммы) и M6-04 (ADR) ещё не сделаны — раздел про них текстовый, без битых ссылок на несуществующие `docs/diagrams/`/`docs/adr/`.
 
 ## Implement
-- [ ] `types/contracts.ts` — `SagaStep`, `SagaStatus`, `SagaOpsDto`, `ListSagasQuery`, `DlqMessageDto`, `DlqQueueSummaryDto`
-- [ ] `lib/api/endpoints.ts` — `getOpsSagas(query, token)`, `getOpsDlq(limit, token)`
-- [ ] `components/ops/saga-filters.tsx` — фильтры статус/шаг через searchParams (по образцу `lot-filters.tsx`)
-- [ ] `components/ops/saga-table.tsx` — таблица саг (шаг/статус/лот/попытки/обновлено, ссылка на `/lots/:id`)
-- [ ] `components/ops/dlq-panel.tsx` — панель DLQ (очередь/dlq-имя/счётчик/раскрывающийся список сообщений)
-- [ ] `app/(protected)/ops/page.tsx` — SSR-страница, параллельный фетч саг+DLQ, catch 403 → "нет доступа"
-- [ ] `components/nav.tsx` — ссылка "Ops", видна только `user?.role === 'admin'`
+- [x] Заголовок + питч (почему домен требует RMQ/Redis)
+- [x] «Что этот проект доказывает» (§1)
+- [x] Карта «паттерн → где живёт» — таблица с рабочими ссылками на реальные файлы
+- [x] Горячий путь ставки — короткая схема + ссылка на `place-bid.handler.ts`
+- [x] Quickstart (`make setup && make up && make seed`, `pnpm dev`, проверочные команды, демо-сценарий 2 вкладки + `DEMO_ENABLED`)
+- [x] Скоуп и non-goals (§2)
+- [x] Диаграммы/ADR — текстовый placeholder на M6-03/M6-04
+- [x] Структура репозитория (кратко, ссылка на CLAUDE.md/спеку)
+- [x] Команды разработки
 
 ## Verify
-- [ ] `pnpm -C apps/web lint && build`
-- [ ] Ручной прогон: логин admin (ops@example.com) → `/ops` показывает саги+DLQ; логин carrier → нет ссылки в nav, прямой заход на `/ops` → "нет доступа" (403 от бэка)
+- [x] Все ссылки на файлы в README резолвятся (`test -e`) — все 25 ссылок валидны
+- [x] Финальная вычитка на длину/сканируемость — короткие абзацы, таблицы, убрана ссылка на внутренний `.claude/rules/*` (агентские потроха не место в портфолио-README)
 
 ## Pipeline
-- [ ] `reviewer`
-- [ ] `spec-guardian`
-- [ ] `security-review`
-- [ ] worklog.md + INDEX.md
-- [ ] отчёт в чат
+- [ ] Запись в docs/worklog.md + галочка в docs/tasks/INDEX.md
+
+## Итог
+README переписан полностью; M6-03/M6-04 остаются как текстовые placeholder'ы без битых ссылок — заполнятся в следующих задачах.
