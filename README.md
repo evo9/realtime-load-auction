@@ -1,5 +1,34 @@
 # Real-time Load Auction
 
+**Backend**
+&nbsp;
+![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?style=flat-square&logo=nestjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.7-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-24-5FA04E?style=flat-square&logo=nodedotjs&logoColor=white)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-4-010101?style=flat-square&logo=socketdotio&logoColor=white)
+![TypeORM](https://img.shields.io/badge/TypeORM-FE0803?style=flat-square)
+
+**Frontend**
+&nbsp;
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?style=flat-square&logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
+![TanStack Query](https://img.shields.io/badge/TanStack_Query-5-FF4154?style=flat-square&logo=reactquery&logoColor=white)
+
+**Infra & Data**
+&nbsp;
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-7-FF4438?style=flat-square&logo=redis&logoColor=white)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3-FF6600?style=flat-square&logo=rabbitmq&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)
+
+**Tooling & Tests**
+&nbsp;
+![pnpm](https://img.shields.io/badge/pnpm-F69220?style=flat-square&logo=pnpm&logoColor=white)
+![Jest](https://img.shields.io/badge/Jest-30-C21325?style=flat-square&logo=jest&logoColor=white)
+![Testcontainers](https://img.shields.io/badge/Testcontainers-291A3D?style=flat-square&logo=testcontainers&logoColor=white)
+![ESLint](https://img.shields.io/badge/ESLint-9-4B32C3?style=flat-square&logo=eslint&logoColor=white)
+
 Аукцион по фрахту **на понижение** (reverse auction — выигрывает наименьшая цена перевозки). Домен — средство, а не цель: он делает RabbitMQ и Redis **обязательными**, а не декоративными — есть реальные деньги на кону (конкурентные ставки), реальный таймер закрытия и реальная необходимость надёжно доставить событие. Стек — **NestJS (модульный монолит) + RabbitMQ + Redis + Postgres**, фронт — Next.js.
 
 Это портфолио-проект. Если у вас 5–10 минут — этот README, потом пара файлов из карты паттернов ниже. Полное ТЗ — [`docs/specs/load-auction-spec.md`](docs/specs/load-auction-spec.md), разбивка на задачи с DoD — [`docs/tasks/INDEX.md`](docs/tasks/INDEX.md), журнал того, что реально сделано и чем проверено — [`docs/worklog.md`](docs/worklog.md).
@@ -184,7 +213,14 @@ flowchart TD
 
 ## Архитектурные решения (ADR)
 
-Ещё не готовы: ключевые решения лягут в `docs/adr/` (M6-04). До тех пор — §4–§8 [спецификации](docs/specs/load-auction-spec.md) и карта паттернов выше как текстовый эквивалент.
+Почему выбрана конкретная библиотека/подход там, где это неочевидно — не «что паттерн делает» (это карта паттернов выше), а «почему так, а не иначе». Полный список — [`docs/adr/`](docs/adr/README.md):
+
+- [`ioredis` вместо `node-redis`](docs/adr/0001-ioredis-over-node-redis.md)
+- [`amqplib` вместо `@nestjs/microservices`/`@golevelup`](docs/adr/0002-amqplib-over-nestjs-microservices.md)
+- [CQRS-lite без `@nestjs/cqrs`](docs/adr/0003-cqrs-lite-without-nestjs-cqrs.md)
+- [Outbox + durable-saga вместо dual-write и in-memory EventBus](docs/adr/0004-outbox-and-durable-saga-over-inmemory-eventbus.md)
+- [Redis CAS как кандидат + reconciliation с Postgres](docs/adr/0005-redis-cas-candidate-with-reconciliation.md)
+- [NestJS 11.x, не 12](docs/adr/0006-nest-11-not-12.md)
 
 ## Структура репозитория
 
