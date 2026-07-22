@@ -21,6 +21,7 @@ export class LotMapper implements Mapper<Lot, LotEntity> {
       version: entity.version,
       winningBidId: entity.winningBidId ?? undefined,
       winningAmount: entity.winningAmount ?? undefined,
+      lastBidAt: entity.lastBidAt ?? undefined,
       createdAt: entity.createdAt,
     };
   }
@@ -44,6 +45,7 @@ export class LotMapper implements Mapper<Lot, LotEntity> {
     entity.version = domain.version;
     entity.winningBidId = domain.winningBidId ?? null;
     entity.winningAmount = domain.winningAmount ?? null;
+    entity.lastBidAt = domain.lastBidAt ?? null;
     entity.createdAt = domain.createdAt;
     return entity;
   }

@@ -31,7 +31,7 @@ describe('PlaceBidHandler', () => {
   let cas: { tryBeatHighBid: jest.Mock; reconcileIfCurrent: jest.Mock };
   let uow: { transaction: jest.Mock };
   let bids: { insert: jest.Mock; findCurrentBest: jest.Mock };
-  let lots: { readStatus: jest.Mock };
+  let lots: { readStatus: jest.Mock; touchLastBidAt: jest.Mock };
   let config: { bidding: { rateLimit: number; rateWindowMs: number } };
   let outboxAdd: jest.Mock;
   let calls: string[];
@@ -92,6 +92,10 @@ describe('PlaceBidHandler', () => {
         calls.push('lots.readStatus');
         return Promise.resolve('open');
       }),
+      touchLastBidAt: jest.fn(() => {
+        calls.push('lots.touchLastBidAt');
+        return Promise.resolve();
+      }),
     };
     config = { bidding: { rateLimit: 10, rateWindowMs: 10000 } };
 
@@ -125,6 +129,7 @@ describe('PlaceBidHandler', () => {
       'transaction.start',
       'lots.readStatus',
       'bids.insert',
+      'lots.touchLastBidAt',
       'outbox.add',
       'transaction.end',
       'idem.complete',

@@ -60,6 +60,9 @@ export class LotEntity {
   @Column({ name: 'winning_amount', type: 'int', nullable: true })
   winningAmount!: number | null;
 
+  @Column({ name: 'last_bid_at', type: 'timestamptz', nullable: true })
+  lastBidAt!: Date | null;
+
   @CreateDateColumn({ name: 'created_at', type: 'timestamptz' })
   createdAt!: Date;
 }

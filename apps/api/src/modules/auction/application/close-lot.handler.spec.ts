@@ -58,21 +58,25 @@ describe('CloseLotHandler', () => {
     );
   });
 
-  it('extends closeAt within the anti-snipe window without closing or touching the outbox', async () => {
+  it('extends closeAt within the anti-snipe window and publishes lot.extended', async () => {
     const closeAt = new Date('2026-07-19T00:00:10.000Z');
     const lastBidAt = new Date('2026-07-19T00:00:00.000Z');
     lots.lockForUpdate.mockResolvedValue(
-      makeLot({ closeAt, antiSnipeWindowSec: 60 }),
+      makeLot({ closeAt, antiSnipeWindowSec: 60, lastBidAt }),
     );
 
-    await handler.execute('lot-1', { lastBidAt });
+    await handler.execute('lot-1');
 
     const expectedCloseAt = new Date(lastBidAt.getTime() + 60_000);
     expect(lots.update).toHaveBeenCalledWith(
       expect.anything(),
       expect.objectContaining({ status: 'open', closeAt: expectedCloseAt }),
     );
-    expect(outboxAdd).not.toHaveBeenCalled();
+    expect(outboxAdd).toHaveBeenCalledTimes(1);
+    expect(outboxAdd).toHaveBeenCalledWith(expect.anything(), 'lot.extended', {
+      lotId: 'lot-1',
+      closeAt: expectedCloseAt.toISOString(),
+    });
     expect(cas.setStatus).not.toHaveBeenCalled();
     expect(scheduler.schedule).toHaveBeenCalledWith(
       'auction:schedule:close',

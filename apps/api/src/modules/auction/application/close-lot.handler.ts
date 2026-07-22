@@ -8,10 +8,6 @@ import { RoutingKeys } from '@src/platform/messaging/messaging.constants';
 import { transitionLot } from '@src/modules/auction/domain/lot-state-machine';
 import { LotRepository } from '@src/modules/auction/infrastructure/lot.repository';
 
-export interface CloseLotOptions {
-  lastBidAt?: Date;
-}
-
 type CloseResult =
   | { kind: 'noop' }
   | { kind: 'extended'; closeAt: Date }
@@ -29,7 +25,7 @@ export class CloseLotHandler {
     private readonly lock: LockService,
   ) {}
 
-  async execute(lotId: string, opts: CloseLotOptions = {}): Promise<void> {
+  async execute(lotId: string): Promise<void> {
     const result = await this.lock.withLock<CloseResult>(
       RedisKeys.lotLock(lotId),
       10_000,
@@ -54,19 +50,23 @@ export class CloseLotHandler {
 
           const windowMs = lot.antiSnipeWindowSec * 1000;
           const withinAntiSnipe =
-            opts.lastBidAt &&
-            lot.closeAt.getTime() - opts.lastBidAt.getTime() <= windowMs;
+            lot.lastBidAt &&
+            lot.closeAt.getTime() - lot.lastBidAt.getTime() <= windowMs;
 
-          if (withinAntiSnipe && opts.lastBidAt) {
+          if (withinAntiSnipe && lot.lastBidAt) {
             // Anti-snipe: the new deadline is measured from the actual last
             // bid, not from the current closeAt or from now — this guarantees
             // a full quiet window after the bid that triggered the extension.
             const extendedCloseAt = new Date(
-              opts.lastBidAt.getTime() + windowMs,
+              lot.lastBidAt.getTime() + windowMs,
             );
             if (extendedCloseAt.getTime() > lot.closeAt.getTime()) {
               const extended = { ...lot, closeAt: extendedCloseAt };
               await this.lots.update(tx, extended);
+              await tx.outbox.add(tx.manager, RoutingKeys.lotExtended, {
+                lotId: extended.id,
+                closeAt: extendedCloseAt.toISOString(),
+              });
               return { kind: 'extended', closeAt: extendedCloseAt };
             }
           }

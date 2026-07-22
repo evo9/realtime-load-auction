@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Countdown } from '@/components/lots/countdown';
+import { formatMoney } from '@/lib/format-money';
 import type { ListingLotDto } from '@/types/contracts';
 
 const EQUIPMENT_LABELS: Record<string, string> = {
@@ -7,12 +8,6 @@ const EQUIPMENT_LABELS: Record<string, string> = {
   reefer: 'Рефрижератор',
   flatbed: 'Платформа',
 };
-
-const currencyFormatter = new Intl.NumberFormat('ru-RU', {
-  style: 'currency',
-  currency: 'USD',
-  maximumFractionDigits: 0,
-});
 
 export function LotCard({ lot }: { lot: ListingLotDto }) {
   return (
@@ -31,7 +26,7 @@ export function LotCard({ lot }: { lot: ListingLotDto }) {
       <div className="mt-2 flex items-center justify-between text-sm text-zinc-600 dark:text-zinc-400">
         <span>
           {lot.currentBest !== undefined
-            ? `Лучшая ставка: ${currencyFormatter.format(lot.currentBest)}`
+            ? `Лучшая ставка: ${formatMoney(lot.currentBest)}`
             : 'Ставок нет'}
         </span>
         <span>
