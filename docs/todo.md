@@ -1,34 +1,25 @@
-# M4-04 — Ops-видимость: состояния саг + содержимое DLQ
+# M5-05 — web: ops-экран (саги + DLQ), опционально
 
-План: /Users/evo/.claude/plans/fluttering-floating-rain.md
+Бэкенд (`GET /ops/sagas`, `GET /ops/dlq`) уже реализован в M4-04, `@Roles('admin')`. Requeue-кнопка — явно опциональна в тексте задачи И у бэка нет соответствующего эндпоинта (см. worklog M4-04: "Requeue/retry-эндпоинт... помечен как опциональный и не входит в DoD") — не реализуем, чтобы не изобретать несуществующий контракт.
+
+Доступ: единственная линия защиты — бэк (`@Roles('admin')`, уже enforced). Фронт: (1) страница ловит 403 от `getOpsSagas`/`getOpsDlq` и показывает "нет доступа" вместо краша; (2) ссылка "Ops" в nav скрыта для не-admin (чисто UX, не граница безопасности).
 
 ## Implement
-- [x] `identity/domain/user.ts` — Role += 'admin'
-- [x] `seed/seed-data.ts` — admin seed-пользователь
-- [x] `platform/messaging/dlq-inspector.ts` — counts/peek (неразрушающий, requeue после чтения)
-- [x] `messaging.module.ts` — DlqInspector в providers/exports
-- [x] `settlement/infrastructure/saga.repository.ts` — `list(filter)` + tie-break по id
-- [x] `settlement.module.ts` — exports: [SagaRepository]
-- [x] `modules/ops/**` — ops.module, list-sagas.handler, list-dlq.handler, ops.controller, DTOs
-- [x] `app.module.ts` — регистрация OpsModule
-
-## Test
-- [x] `saga.repository.integration-spec.ts` — list по статусу/шагу/lotId/limit/offset
-- [x] `dlq-inspector.integration-spec.ts` — counts, peek неразрушающий
-- [x] `list-sagas.handler.spec.ts` / `list-dlq.handler.spec.ts` — unit
-- [x] `test/ops.e2e-spec.ts` — 401/403/200, форма ответа
+- [ ] `types/contracts.ts` — `SagaStep`, `SagaStatus`, `SagaOpsDto`, `ListSagasQuery`, `DlqMessageDto`, `DlqQueueSummaryDto`
+- [ ] `lib/api/endpoints.ts` — `getOpsSagas(query, token)`, `getOpsDlq(limit, token)`
+- [ ] `components/ops/saga-filters.tsx` — фильтры статус/шаг через searchParams (по образцу `lot-filters.tsx`)
+- [ ] `components/ops/saga-table.tsx` — таблица саг (шаг/статус/лот/попытки/обновлено, ссылка на `/lots/:id`)
+- [ ] `components/ops/dlq-panel.tsx` — панель DLQ (очередь/dlq-имя/счётчик/раскрывающийся список сообщений)
+- [ ] `app/(protected)/ops/page.tsx` — SSR-страница, параллельный фетч саг+DLQ, catch 403 → "нет доступа"
+- [ ] `components/nav.tsx` — ссылка "Ops", видна только `user?.role === 'admin'`
 
 ## Verify
-- [x] `pnpm -C apps/api lint`
-- [x] `pnpm -C apps/api build`
-- [x] `pnpm -C apps/api test` (167/167)
-- [x] `pnpm -C apps/api test:integration` (28/28, 97/97, 2 прогона)
-- [x] `pnpm -C apps/api test:e2e` (8/8, 24/24, 2 прогона)
+- [ ] `pnpm -C apps/web lint && build`
+- [ ] Ручной прогон: логин admin (ops@example.com) → `/ops` показывает саги+DLQ; логин carrier → нет ссылки в nav, прямой заход на `/ops` → "нет доступа" (403 от бэка)
 
 ## Pipeline
-- [x] `reviewer` — NEEDS REVISION → фикс lockToken → PASS
-- [x] `security-review` — Medium (lockToken) устранён
-- [x] `spec-guardian` — ALIGNED
-- [x] `pattern-verifier` — PROVEN
-- [x] worklog.md + INDEX.md (закрывает M4)
-- [x] отчёт в чат
+- [ ] `reviewer`
+- [ ] `spec-guardian`
+- [ ] `security-review`
+- [ ] worklog.md + INDEX.md
+- [ ] отчёт в чат

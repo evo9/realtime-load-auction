@@ -30,5 +30,6 @@ export interface Lot {
   version: number;
   winningBidId?: string;
   winningAmount?: Money;
+  lastBidAt?: Date;
   createdAt: Date;
 }

@@ -86,6 +86,7 @@ export class PlaceBidHandler {
           amount: cmd.amount,
           idempotencyKey: cmd.idempotencyKey,
         });
+        await this.lots.touchLastBidAt(tx, cmd.lotId, bid.createdAt);
         await tx.outbox.add(tx.manager, RoutingKeys.bidPlaced, {
           lotId: bid.lotId,
           bidId: bid.id,

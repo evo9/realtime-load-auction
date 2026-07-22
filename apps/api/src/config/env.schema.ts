@@ -77,6 +77,8 @@ export const envSchema = z.object({
     .min(100)
     .max(60_000)
     .default(10000),
+
+  CORS_ORIGINS: z.string().default('http://localhost:3001'),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

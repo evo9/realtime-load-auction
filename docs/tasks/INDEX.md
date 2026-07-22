@@ -38,11 +38,11 @@
 - [x] [M4-04](M4-04-ops-visibility.md) — ops-видимость: состояния саг + DLQ
 
 ## M5 — фронт
-- [ ] [M5-01](M5-01-web-scaffold.md) — web scaffold: Next.js, auth, react-query, WS-клиент
-- [ ] [M5-02](M5-02-web-lots-list.md) — список лотов (SSR + фильтры)
-- [ ] [M5-03](M5-03-web-live-lot.md) — страница живого лота (WS, отсчёт, форма) — витрина
-- [ ] [M5-04](M5-04-web-my-bids.md) — дашборд «Мои ставки»
-- [ ] [M5-05](M5-05-web-ops-screen.md) — ops-экран (саги + DLQ) — опц.
+- [x] [M5-01](M5-01-web-scaffold.md) — web scaffold: Next.js, auth, react-query, WS-клиент
+- [x] [M5-02](M5-02-web-lots-list.md) — список лотов (SSR + фильтры)
+- [x] [M5-03](M5-03-web-live-lot.md) — страница живого лота (WS, отсчёт, форма) — витрина
+- [x] [M5-04](M5-04-web-my-bids.md) — дашборд «Мои ставки»
+- [x] [M5-05](M5-05-web-ops-screen.md) — ops-экран (саги + DLQ) — опц.
 
 ## M6 — оживление + полировка
 - [ ] [M6-01](M6-01-demo-generator.md) — генератор демо-активности (боты)
