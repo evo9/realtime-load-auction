@@ -6,6 +6,7 @@ import { AMQP_CONNECTION } from '@src/platform/messaging/amqp-connection.token';
 import { AmqpLifecycle } from '@src/platform/messaging/amqp-lifecycle';
 import { MESSAGING_CONFIG } from '@src/platform/messaging/messaging.config.token';
 import { DEDUP_PORT } from '@src/platform/messaging/dedup.port';
+import { DlqInspector } from '@src/platform/messaging/dlq-inspector';
 import { Publisher } from '@src/platform/messaging/publisher';
 import { TopologyService } from '@src/platform/messaging/topology';
 import { IdempotencyModule } from '@src/platform/idempotency/idempotency.module';
@@ -52,6 +53,7 @@ export { AMQP_CONNECTION, MESSAGING_CONFIG, DEDUP_PORT };
     },
     Publisher,
     TopologyService,
+    DlqInspector,
   ],
   exports: [
     RABBITMQ_OPTIONS,
@@ -59,6 +61,7 @@ export { AMQP_CONNECTION, MESSAGING_CONFIG, DEDUP_PORT };
     MESSAGING_CONFIG,
     DEDUP_PORT,
     Publisher,
+    DlqInspector,
   ],
 })
 export class MessagingModule {}

@@ -6,6 +6,21 @@ else
 end
 `;
 
+// KEYS[1]=key  ARGV[1]=token  ARGV[2]=ttlMs
+// Reentrant acquire: a caller that already owns the key (same token, e.g.
+// after a process restart that persisted the token in saga payload) can
+// re-acquire and refresh the TTL instead of being locked out by itself.
+export const LOCK_ACQUIRE_OWNED = `
+if redis.call('SET', KEYS[1], ARGV[1], 'PX', ARGV[2], 'NX') then
+  return 1
+end
+if redis.call('GET', KEYS[1]) == ARGV[1] then
+  redis.call('PEXPIRE', KEYS[1], ARGV[2])
+  return 1
+end
+return 0
+`;
+
 // KEYS[1]=lot:{id}:high  KEYS[2]=lot:{id}:status
 // ARGV[1]=amount  ARGV[2]=carrierId  ARGV[3]=bidId
 export const CAS_BEAT_HIGH_BID = `

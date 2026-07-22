@@ -123,6 +123,36 @@ describe('BaseConsumer retry/DLQ (integration)', () => {
     await inspector.close();
   }, 20_000);
 
+  it('moves a failing listing.q message to its DLQ after exhausting retries', async () => {
+    const consumer = new FailingConsumer(connection, publisher, Queues.listing);
+    await consumer.onModuleInit();
+
+    await publisher.publish(
+      Exchanges.events,
+      'lot.opened',
+      { foo: 'bar' },
+      { messageId: 'retry-listing-1' },
+    );
+
+    const inspector = connection.createChannel({ json: false });
+    await inspector.waitForConnect();
+
+    const dlqMessage = await pollForMessage(
+      inspector,
+      dlqName(Queues.listing),
+      10_000,
+    );
+
+    expect(dlqMessage).not.toBe(false);
+    const headers = (dlqMessage as GetMessage).properties.headers as Record<
+      string,
+      unknown
+    >;
+    expect(headers['x-attempt']).toBe(fastRetryConfig.retryLimit + 1);
+
+    await inspector.close();
+  }, 20_000);
+
   it('acks a successfully processed message and leaves the DLQ empty', async () => {
     let processed = 0;
     // settlementSteps is bound only to the settlementCommands exchange, so it

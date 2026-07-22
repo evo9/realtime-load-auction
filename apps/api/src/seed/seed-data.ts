@@ -14,6 +14,7 @@ export const SEED_USERS: SeedUser[] = [
   { email: 'carrier1@example.com', role: 'carrier' },
   { email: 'carrier2@example.com', role: 'carrier' },
   { email: 'carrier3@example.com', role: 'carrier' },
+  { email: 'ops@example.com', role: 'admin' },
 ];
 
 export interface SeedLotSpec {
