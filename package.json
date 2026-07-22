@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "description": "Корневой раннер скриптов. НЕ pnpm workspace: apps/api и apps/web остаются независимыми (раздельные pnpm-lock.yaml и node_modules).",
-  "packageManager": "pnpm@9",
+  "packageManager": "pnpm@11.5.1",
   "engines": {
     "node": ">=20"
   },

@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '11.5.1'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: |
+            apps/api/pnpm-lock.yaml
+            apps/web/pnpm-lock.yaml
+      - run: pnpm -C apps/api install --frozen-lockfile
+      - run: pnpm -C apps/web install --frozen-lockfile
+      - run: pnpm lint
+
+  unit-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: apps/api/pnpm-lock.yaml
+      - run: pnpm -C apps/api install --frozen-lockfile
+      # AppConfigModule's ConfigModule.forRoot() runs validateEnv() the
+      # moment the module file is imported (not on Nest DI compile), so any
+      # spec that pulls in a platform module transitively needs a real
+      # apps/api/.env on disk — apps/api/.env is gitignored, so a clean
+      # checkout never has one. Placeholder values from .env.example satisfy
+      # the zod schema; unit tests mock all real connections, so the actual
+      # values are irrelevant.
+      - run: cp apps/api/.env.example apps/api/.env
+      # Jest's default worker count is CPU-count-based and can outrun a
+      # memory-constrained runner (ts-jest compiles the NestJS module graph
+      # per worker) — cap it explicitly rather than trust the default.
+      - run: pnpm -C apps/api test --maxWorkers=2
+
+  integration-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: apps/api/pnpm-lock.yaml
+      - run: pnpm -C apps/api install --frozen-lockfile
+      # See the unit-test job: apps/api/.env is gitignored and absent on a
+      # clean checkout, which crashes any spec whose import graph touches a
+      # platform *.module.ts file (ConfigModule.forRoot() validates env at
+      # import time). No integration spec does this today, but the cost of
+      # guarding against it here is one cheap, harmless step.
+      - run: cp apps/api/.env.example apps/api/.env
+      # Each *.integration-spec.ts starts its own Postgres/RabbitMQ/Redis via
+      # testcontainers against the runner's built-in Docker daemon — no
+      # services: block needed, testcontainers owns the container lifecycle.
+      - run: pnpm -C apps/api test:integration
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+          cache-dependency-path: |
+            apps/api/pnpm-lock.yaml
+            apps/web/pnpm-lock.yaml
+      - run: pnpm -C apps/api install --frozen-lockfile
+      - run: pnpm -C apps/web install --frozen-lockfile
+      - run: pnpm build

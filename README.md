@@ -1,5 +1,7 @@
 # Real-time Load Auction
 
+[![CI](https://github.com/evo9/realtime-load-auction/actions/workflows/ci.yml/badge.svg)](https://github.com/evo9/realtime-load-auction/actions/workflows/ci.yml)
+
 **Backend**
 &nbsp;
 ![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?style=flat-square&logo=nestjs&logoColor=white)
