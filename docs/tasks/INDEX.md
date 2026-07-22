@@ -39,7 +39,7 @@
 
 ## M5 — фронт
 - [x] [M5-01](M5-01-web-scaffold.md) — web scaffold: Next.js, auth, react-query, WS-клиент
-- [ ] [M5-02](M5-02-web-lots-list.md) — список лотов (SSR + фильтры)
+- [x] [M5-02](M5-02-web-lots-list.md) — список лотов (SSR + фильтры)
 - [ ] [M5-03](M5-03-web-live-lot.md) — страница живого лота (WS, отсчёт, форма) — витрина
 - [ ] [M5-04](M5-04-web-my-bids.md) — дашборд «Мои ставки»
 - [ ] [M5-05](M5-05-web-ops-screen.md) — ops-экран (саги + DLQ) — опц.

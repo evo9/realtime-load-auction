@@ -28,3 +28,35 @@ export interface RealtimeEnvelope {
   lotId: string;
   payload: unknown;
 }
+
+export type LotStatus = 'open' | 'closing';
+export type EquipmentType = 'van' | 'reefer' | 'flatbed';
+
+export interface ListingLotDto {
+  id: string;
+  shipperId: string;
+  origin: string;
+  destination: string;
+  equipmentType: EquipmentType;
+  weightKg: number;
+  reservePrice: number;
+  targetPrice?: number;
+  status: LotStatus;
+  openAt: string;
+  closeAt: string;
+  currentBest?: number;
+}
+
+export interface ListLotsQuery {
+  status?: LotStatus;
+  equipmentType?: EquipmentType;
+  origin?: string;
+  destination?: string;
+  cursor?: string;
+  limit?: number;
+}
+
+export interface ListLotsResponse {
+  items: ListingLotDto[];
+  nextCursor?: string;
+}
