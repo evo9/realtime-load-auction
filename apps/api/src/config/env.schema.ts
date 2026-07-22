@@ -79,6 +79,38 @@ export const envSchema = z.object({
     .default(10000),
 
   CORS_ORIGINS: z.string().default('http://localhost:3001'),
+
+  DEMO_ENABLED: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
+  DEMO_LOT_INTERVAL_MS: z.coerce
+    .number()
+    .int()
+    .min(1000)
+    .max(600_000)
+    .default(30000),
+  DEMO_BID_INTERVAL_MS: z.coerce
+    .number()
+    .int()
+    .min(500)
+    .max(60_000)
+    .default(2500),
+  DEMO_MAX_OPEN_LOTS: z.coerce.number().int().min(1).max(100).default(12),
+  DEMO_LOT_DURATION_MS: z.coerce
+    .number()
+    .int()
+    .min(30_000)
+    .max(3_600_000)
+    .default(120000),
+  DEMO_ANTISNIPE_WINDOW_SEC: z.coerce
+    .number()
+    .int()
+    .min(5)
+    .max(120)
+    .default(20),
+  DEMO_BID_PROBABILITY: z.coerce.number().min(0).max(1).default(0.35),
+  DEMO_BURST_PROBABILITY: z.coerce.number().min(0).max(1).default(0.9),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

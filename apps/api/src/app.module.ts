@@ -9,6 +9,7 @@ import { HealthModule } from '@src/health/health.module';
 import { AuctionModule } from '@src/modules/auction/auction.module';
 import { AuctionSchedulerWiringModule } from '@src/modules/auction/auction-scheduler-wiring.module';
 import { BiddingModule } from '@src/modules/bidding/bidding.module';
+import { DemoModule } from '@src/modules/demo/demo.module';
 import { IdentityModule } from '@src/modules/identity/identity.module';
 import { ListingModule } from '@src/modules/listing/listing.module';
 import { NotificationModule } from '@src/modules/notification/notification.module';
@@ -36,6 +37,7 @@ import { SchedulerModule } from '@src/platform/scheduler/scheduler.module';
     AuctionModule,
     AuctionSchedulerWiringModule,
     BiddingModule,
+    DemoModule,
     ListingModule,
     RealtimeModule,
     NotificationModule,

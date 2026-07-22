@@ -23,6 +23,6 @@ import { LotsController } from '@src/modules/auction/api/lots.controller';
     GetLotHandler,
     AuctionSchedulerDispatcher,
   ],
-  exports: [LotRepository, AuctionSchedulerDispatcher],
+  exports: [LotRepository, AuctionSchedulerDispatcher, CreateLotHandler],
 })
 export class AuctionModule {}

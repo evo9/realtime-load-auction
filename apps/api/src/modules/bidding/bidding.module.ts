@@ -23,6 +23,6 @@ import { MyBidsController } from '@src/modules/bidding/api/my-bids.controller';
     GetLotBidsHandler,
     GetMyBidsHandler,
   ],
-  exports: [BidRepository],
+  exports: [BidRepository, PlaceBidHandler],
 })
 export class BiddingModule {}
