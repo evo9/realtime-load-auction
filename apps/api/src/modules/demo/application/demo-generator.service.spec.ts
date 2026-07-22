@@ -1,4 +1,5 @@
 import { AppConfigService } from '@src/config/app-config.service';
+import { Lot } from '@src/modules/auction/domain/lot';
 import { CreateLotCommand } from '@src/modules/auction/domain/lot-factory';
 import {
   PlaceBidCommand,
@@ -58,7 +59,7 @@ function makeLot(overrides: Partial<ListingLotEntity> = {}): ListingLotEntity {
 describe('DemoGeneratorService', () => {
   let config: ReturnType<typeof makeConfig>;
   let scheduler: { addInterval: jest.Mock<void, [string, NodeJS.Timeout]> };
-  let createLot: { execute: jest.Mock<Promise<void>, [CreateLotCommand]> };
+  let createLot: { execute: jest.Mock<Promise<Lot>, [CreateLotCommand]> };
   let placeBid: {
     execute: jest.Mock<Promise<PlaceBidOutcome>, [PlaceBidCommand]>;
   };
@@ -73,8 +74,8 @@ describe('DemoGeneratorService', () => {
     config = makeConfig();
     scheduler = { addInterval: jest.fn<void, [string, NodeJS.Timeout]>() };
     createLot = {
-      execute: jest.fn<Promise<void>, [CreateLotCommand]>(() =>
-        Promise.resolve(),
+      execute: jest.fn<Promise<Lot>, [CreateLotCommand]>(() =>
+        Promise.resolve({} as Lot),
       ),
     };
     placeBid = {
