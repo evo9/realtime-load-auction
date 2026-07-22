@@ -9,6 +9,7 @@ import {
   SagaInstance,
   SagaPayload,
   SagaStatus,
+  SagaStep,
 } from '@src/modules/settlement/domain/saga';
 import { SagaInstanceEntity } from '@src/modules/settlement/infrastructure/saga-instance.entity';
 import { SagaMapper } from '@src/modules/settlement/infrastructure/saga.mapper';
@@ -16,6 +17,14 @@ import { SagaMapper } from '@src/modules/settlement/infrastructure/saga.mapper';
 export interface CreateSagaInput {
   lotId: string;
   payload: SagaPayload;
+}
+
+export interface ListSagasFilter {
+  status?: SagaStatus;
+  step?: SagaStep;
+  lotId?: string;
+  limit: number;
+  offset: number;
 }
 
 @Injectable()
@@ -67,6 +76,21 @@ export class SagaRepository extends BaseRepository<SagaInstanceEntity> {
   async findById(id: string): Promise<SagaInstance | null> {
     const entity = await this.read().findOneBy({ id });
     return entity ? this.mapper.toDomain(entity) : null;
+  }
+
+  async list(filter: ListSagasFilter): Promise<SagaInstance[]> {
+    const qb = this.read().createQueryBuilder('s');
+    if (filter.status)
+      qb.andWhere('s.status = :status', { status: filter.status });
+    if (filter.step) qb.andWhere('s.step = :step', { step: filter.step });
+    if (filter.lotId) qb.andWhere('s.lotId = :lotId', { lotId: filter.lotId });
+    qb.orderBy('s.updatedAt', 'DESC')
+      .addOrderBy('s.id', 'DESC')
+      .skip(filter.offset)
+      .take(filter.limit);
+
+    const rows = await qb.getMany();
+    return rows.map((r) => this.mapper.toDomain(r));
   }
 
   async lockForUpdate(

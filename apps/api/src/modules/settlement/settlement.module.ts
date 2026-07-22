@@ -38,5 +38,6 @@ import { SettlementStepConsumer } from '@src/modules/settlement/application/sett
     SettlementTriggerConsumer,
     SettlementStepConsumer,
   ],
+  exports: [SagaRepository],
 })
 export class SettlementModule {}

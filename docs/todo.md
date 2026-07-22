@@ -1,41 +1,34 @@
-# M4-02 — settlement: шаги саги + компенсации
+# M4-04 — Ops-видимость: состояния саг + содержимое DLQ
 
 План: /Users/evo/.claude/plans/fluttering-floating-rain.md
 
 ## Implement
-- [x] `saga.ts` — `previousStep(step)`
-- [x] `domain/settlement-command.ts` — SettlementStepCommand/StepDirection
-- [x] `SagaRepository.lockForUpdate(tx, id)`
-- [x] `LockService.acquireOwned(key, token, ttlMs)` + Lua
-- [x] `messaging.constants.ts` — `CommandRoutingKeys.settlementStep`
-- [x] `infrastructure/step-command.publisher.ts`
-- [x] `fund-reservation.entity.ts` + repository + `reservation.service.ts` + миграция
-- [x] `invoice.entity.ts` + repository + `invoice.service.ts` + миграция
-- [x] `notification/domain/notification.ts` + `notification-templates.ts` — lot_won/lot_settled
-- [x] `notification.module.ts` — export NotificationLogRepository
-- [x] `settlement-notifier.ts`
-- [x] `settlement-trigger.consumer.ts` — seed lockToken, publish первый кик
-- [x] `application/settlement-step.consumer.ts` — forward/compensate/beginCompensation/finalizeCancel
-- [x] `settlement.module.ts` — wiring
+- [x] `identity/domain/user.ts` — Role += 'admin'
+- [x] `seed/seed-data.ts` — admin seed-пользователь
+- [x] `platform/messaging/dlq-inspector.ts` — counts/peek (неразрушающий, requeue после чтения)
+- [x] `messaging.module.ts` — DlqInspector в providers/exports
+- [x] `settlement/infrastructure/saga.repository.ts` — `list(filter)` + tie-break по id
+- [x] `settlement.module.ts` — exports: [SagaRepository]
+- [x] `modules/ops/**` — ops.module, list-sagas.handler, list-dlq.handler, ops.controller, DTOs
+- [x] `app.module.ts` — регистрация OpsModule
 
 ## Test
-- [x] happy-path: settled + winner + резерв/инвойс + 2 нотификации + settlement.completed
-- [x] compensation: сбой на invoice → откат 3..1, cancelled, settlement.failed(step_failed:invoice)
-- [x] no-bids: cancelled без резерва/инвойса, settlement.failed(no_valid_bids)
-- [x] exactly-once: повторный settle-кик — no-op
-- [x] unit: previousStep, acquireOwned
+- [x] `saga.repository.integration-spec.ts` — list по статусу/шагу/lotId/limit/offset
+- [x] `dlq-inspector.integration-spec.ts` — counts, peek неразрушающий
+- [x] `list-sagas.handler.spec.ts` / `list-dlq.handler.spec.ts` — unit
+- [x] `test/ops.e2e-spec.ts` — 401/403/200, форма ответа
 
 ## Verify
 - [x] `pnpm -C apps/api lint`
 - [x] `pnpm -C apps/api build`
-- [x] `pnpm -C apps/api test`
-- [x] `pnpm -C apps/api test:integration` (3 прогона без флейка)
-- [x] миграции на `make up`-инфре (run/revert/run)
+- [x] `pnpm -C apps/api test` (167/167)
+- [x] `pnpm -C apps/api test:integration` (28/28, 97/97, 2 прогона)
+- [x] `pnpm -C apps/api test:e2e` (8/8, 24/24, 2 прогона)
 
 ## Pipeline
-- [x] `reviewer` — PASS (suggestion применён: упрощён compensateLock)
-- [x] `security-review` — без Critical/High/Medium
+- [x] `reviewer` — NEEDS REVISION → фикс lockToken → PASS
+- [x] `security-review` — Medium (lockToken) устранён
 - [x] `spec-guardian` — ALIGNED
 - [x] `pattern-verifier` — PROVEN
-- [x] worklog.md запись + INDEX.md галочка
+- [x] worklog.md + INDEX.md (закрывает M4)
 - [x] отчёт в чат

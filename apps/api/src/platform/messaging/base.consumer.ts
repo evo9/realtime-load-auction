@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import type { ConfirmChannel, ConsumeMessage } from 'amqplib';
 import type { AmqpConnectionManager } from 'amqp-connection-manager';
 import { AMQP_CONNECTION } from '@src/platform/messaging/amqp-connection.token';
@@ -9,6 +9,7 @@ import { declareTopology } from '@src/platform/messaging/topology';
 import { Exchanges } from '@src/platform/messaging/messaging.constants';
 import { DEDUP_PORT } from '@src/platform/messaging/dedup.port';
 import type { DedupPort } from '@src/platform/messaging/dedup.port';
+import { computeRetryDelayMs } from '@src/platform/messaging/retry-backoff';
 
 export interface RmqMessage<T = unknown> {
   messageId: string;
@@ -23,6 +24,7 @@ export interface RmqMessage<T = unknown> {
 export abstract class BaseConsumer<T = unknown> implements OnModuleInit {
   protected abstract readonly queue: string;
   protected abstract readonly prefetch: number;
+  private readonly retryLogger = new Logger(this.constructor.name);
 
   constructor(
     @Inject(AMQP_CONNECTION) private readonly connection: AmqpConnectionManager,
@@ -102,6 +104,9 @@ export abstract class BaseConsumer<T = unknown> implements OnModuleInit {
     const messageId =
       (raw.properties.messageId as string | undefined) ??
       raw.fields.deliveryTag.toString();
+    this.retryLogger.error(
+      `${this.queue}: message ${messageId} has an unparsable body — moved straight to DLQ without retrying: ${String(err)}`,
+    );
     await this.publisher.publish(
       Exchanges.dlx,
       this.queue,
@@ -122,6 +127,9 @@ export abstract class BaseConsumer<T = unknown> implements OnModuleInit {
   ): Promise<void> {
     const nextAttempt = msg.attempt + 1;
     if (nextAttempt > this.config.retryLimit) {
+      this.retryLogger.error(
+        `${this.queue}: message ${msg.messageId} (${msg.routingKey}) exhausted ${this.config.retryLimit} retries — moved to DLQ: ${String(err)}`,
+      );
       await this.publisher.publish(Exchanges.dlx, this.queue, msg.payload, {
         messageId: msg.messageId,
         headers: {
@@ -131,19 +139,16 @@ export abstract class BaseConsumer<T = unknown> implements OnModuleInit {
         },
       });
     } else {
+      const delayMs = computeRetryDelayMs(nextAttempt, this.config);
+      this.retryLogger.warn(
+        `${this.queue}: message ${msg.messageId} (${msg.routingKey}) failed — scheduling retry ${nextAttempt}/${this.config.retryLimit} in ${delayMs}ms: ${String(err)}`,
+      );
       await this.publisher.publish(Exchanges.retry, this.queue, msg.payload, {
         messageId: msg.messageId,
         headers: { ...msg.headers, 'x-attempt': nextAttempt },
-        expiration: String(this.backoff(nextAttempt)),
+        expiration: String(delayMs),
       });
     }
     channel.ack(raw);
-  }
-
-  private backoff(attempt: number): number {
-    const ttl =
-      this.config.retryBaseTtlMs *
-      Math.pow(this.config.retryMultiplier, attempt - 1);
-    return Math.min(ttl, this.config.retryMaxTtlMs);
   }
 }

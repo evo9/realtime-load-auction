@@ -165,4 +165,137 @@ describe('SagaRepository (integration)', () => {
 
     await dataSource.destroy();
   }, 30_000);
+
+  describe('list', () => {
+    let dataSource: DataSource;
+    let sagas: SagaRepository;
+    let uow: UnitOfWork;
+
+    beforeAll(async () => {
+      dataSource = new DataSource(dataSourceOptions(container));
+      await dataSource.initialize();
+      sagas = new SagaRepository(dataSource);
+      uow = new UnitOfWork(dataSource, new NullOutboxPort());
+    }, 30_000);
+
+    afterAll(async () => {
+      await dataSource.destroy();
+    });
+
+    it('filters by status', async () => {
+      const lotA = randomUUID();
+      const lotB = randomUUID();
+      const lotC = randomUUID();
+
+      const sagaA = await uow.transaction((tx) =>
+        sagas.create(tx, { lotId: lotA, payload: {} }),
+      );
+      const sagaB = await uow.transaction((tx) =>
+        sagas.create(tx, { lotId: lotB, payload: {} }),
+      );
+      await uow.transaction((tx) =>
+        sagas.create(tx, { lotId: lotC, payload: {} }),
+      );
+
+      await uow.transaction((tx) =>
+        sagas.update(tx, { ...sagaA, status: SagaStatus.Completed }),
+      );
+      await uow.transaction((tx) =>
+        sagas.update(tx, { ...sagaB, status: SagaStatus.Failed }),
+      );
+
+      const completed = await sagas.list({
+        status: SagaStatus.Completed,
+        limit: 100,
+        offset: 0,
+      });
+      expect(completed.map((s) => s.lotId)).toContain(lotA);
+      expect(completed.map((s) => s.lotId)).not.toContain(lotB);
+      expect(completed.map((s) => s.lotId)).not.toContain(lotC);
+    });
+
+    it('filters by step', async () => {
+      const lotA = randomUUID();
+      const lotB = randomUUID();
+
+      const sagaA = await uow.transaction((tx) =>
+        sagas.create(tx, { lotId: lotA, payload: {} }),
+      );
+      await uow.transaction((tx) =>
+        sagas.create(tx, { lotId: lotB, payload: {} }),
+      );
+
+      await uow.transaction((tx) =>
+        sagas.update(tx, { ...sagaA, step: SagaStep.Invoice }),
+      );
+
+      const atInvoice = await sagas.list({
+        step: SagaStep.Invoice,
+        limit: 100,
+        offset: 0,
+      });
+      expect(atInvoice.map((s) => s.lotId)).toContain(lotA);
+      expect(atInvoice.map((s) => s.lotId)).not.toContain(lotB);
+
+      const atLock = await sagas.list({
+        step: SagaStep.Lock,
+        limit: 100,
+        offset: 0,
+      });
+      expect(atLock.map((s) => s.lotId)).toContain(lotB);
+      expect(atLock.map((s) => s.lotId)).not.toContain(lotA);
+    });
+
+    it('filters by lotId', async () => {
+      const targetLotId = randomUUID();
+      await uow.transaction((tx) =>
+        sagas.create(tx, { lotId: targetLotId, payload: {} }),
+      );
+      await uow.transaction((tx) =>
+        sagas.create(tx, { lotId: randomUUID(), payload: {} }),
+      );
+      await uow.transaction((tx) =>
+        sagas.create(tx, { lotId: randomUUID(), payload: {} }),
+      );
+
+      const found = await sagas.list({
+        lotId: targetLotId,
+        limit: 100,
+        offset: 0,
+      });
+      expect(found).toHaveLength(1);
+      expect(found[0].lotId).toBe(targetLotId);
+    });
+
+    it('paginates with limit/offset and orders updatedAt DESC', async () => {
+      const lotIds = [randomUUID(), randomUUID(), randomUUID(), randomUUID()];
+      for (const lotId of lotIds) {
+        await uow.transaction((tx) => sagas.create(tx, { lotId, payload: {} }));
+      }
+
+      // Touch each saga in order so updatedAt strictly increases, and the
+      // last one touched is unambiguously the most recent.
+      const updated: string[] = [];
+      for (const lotId of lotIds) {
+        const saga = await sagas.findByLotId(lotId);
+        await uow.transaction((tx) =>
+          sagas.update(tx, { ...saga!, attempts: saga!.attempts + 1 }),
+        );
+        updated.push(lotId);
+        await new Promise((resolve) => setTimeout(resolve, 20));
+      }
+
+      const page1 = await sagas.list({ limit: 2, offset: 0 });
+      const page2 = await sagas.list({ limit: 2, offset: 2 });
+
+      const orderedIds = [...page1, ...page2]
+        .map((s) => s.lotId)
+        .filter((id) => lotIds.includes(id));
+
+      const expectedOrder = [...updated].reverse();
+      expect(orderedIds).toEqual(expectedOrder);
+      expect(page1).toHaveLength(2);
+      expect(page2).toHaveLength(2);
+    });
+  });
 });
