@@ -103,4 +103,14 @@ export class AppConfigService {
       rateWindowMs: this.config.get('BID_RATE_WINDOW_MS', { infer: true }),
     };
   }
+
+  get cors() {
+    return {
+      origins: this.config
+        .get('CORS_ORIGINS', { infer: true })
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    };
+  }
 }

@@ -21,6 +21,11 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   const config = app.get(AppConfigService);
+  app.enableCors({
+    origin: config.cors.origins,
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Idempotency-Key'],
+  });
   await app.listen(config.port);
 }
 void bootstrap();
