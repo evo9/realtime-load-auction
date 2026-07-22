@@ -3,11 +3,13 @@ import type {
   BidHistoryResponse,
   BidView,
   GetLotBidsQuery,
+  GetMyBidsQuery,
   JwtPayload,
   ListLotsQuery,
   ListLotsResponse,
   LoginResponse,
   LotResponseDto,
+  MyBidsResponse,
 } from '@/types/contracts';
 
 export function login(email: string, password: string): Promise<LoginResponse> {
@@ -55,6 +57,20 @@ export function getLotBids(
     `/lots/${lotId}/bids${qs ? `?${qs}` : ''}`,
     { token },
   );
+}
+
+export function getMyBids(
+  query: GetMyBidsQuery = {},
+  token?: string,
+): Promise<MyBidsResponse> {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query)) {
+    if (value !== undefined && value !== '') {
+      params.set(key, String(value));
+    }
+  }
+  const qs = params.toString();
+  return apiRequest<MyBidsResponse>(`/me/bids${qs ? `?${qs}` : ''}`, { token });
 }
 
 export function placeBid(

@@ -126,3 +126,23 @@ export type PlaceBidRejectionReason =
   | 'closed'
   | 'idempotency_in_progress'
   | 'rate_limited';
+
+export type MyBidStatus = 'leading' | 'outbid' | 'won' | 'lost';
+
+export interface MyBidDto {
+  id: string;
+  lotId: string;
+  amount: number;
+  createdAt: string;
+  status: MyBidStatus;
+}
+
+export interface MyBidsResponse {
+  items: MyBidDto[];
+  nextCursor?: string;
+}
+
+export interface GetMyBidsQuery {
+  cursor?: string;
+  limit?: number;
+}
